@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Usuarios — Agenda Salesiana{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}"/>
+{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestión de Usuarios</h1>
+    <p class="page-subtitle">Administra los usuarios del sistema</p>
+  </div>
+  {% if session.get('rol') == 'superadmin' %}
+  <button class="btn btn-primary" onclick="openUserModal()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Nuevo Usuario
+  </button>
+  {% endif %}
+</div>
+
+<div class="table-container">
+  <table class="data-table" id="usersTable">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Correo</th>
+        <th>Username</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="usersBody">
+      <tr><td colspan="5" class="loading-row">Cargando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MODAL DETALLE USUARIO -->
+<div class="modal-overlay" id="userDetailModal" onclick="closeUserDetailModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detalleUserNombre">Detalle de Usuario</h2>
+      <button class="modal-close" onclick="closeUserDetailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="user-detail-info">
+        <div class="detail-item"><strong>Nombre:</strong> <span id="detalleUserFullNombre"></span></div>
+        <div class="detail-item"><strong>Correo:</strong> <span id="detalleUserEmail"></span></div>
+        <div class="detail-item"><strong>Username:</strong> <code id="detalleUserUsername"></code></div>
+        <div class="detail-item"><strong>Rol:</strong> <span id="detalleUserRol" class="badge"></span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUserDetailModal()">Cerrar</button>
+      {% if session.get('rol') == 'superadmin' %}
+      <button class="btn btn-primary" id="btnEditarUsuarioDesdeDetalle" onclick="abrirEdicionUsuarioDesdeDetalle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Editar Usuario
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal-overlay" id="userModal" onclick="closeUserModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalUserTitle">Nuevo Usuario</h2>
+      <button class="modal-close" onclick="closeUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_user_id"/>
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="u_nombre" class="form-input" placeholder="Nombre completo"/>
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico *</label>
+        <input type="email" id="u_email" class="form-input" placeholder="correo@ejemplo.com"/>
+      </div>
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" id="u_user" class="form-input" placeholder="username"/>
+      </div>
+      <div class="form-group">
+        <label>Contraseña <span class="hint" id="passwordHint">(requerida)</span></label>
+        <input type="password" id="u_password" class="form-input" placeholder="••••••••"/>
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select id="u_rol" class="form-input form-select">
+          <option value="user">user</option>
+          <option value="admin">admin</option>
+          {% if session.get('rol') == 'superadmin' %}
+          <option value="superadmin">superadmin</option>
+          {% endif %}
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+      {% if session.get('rol') == 'superadmin' %}
+      <button class="btn btn-danger" id="btnDeleteUser" onclick="eliminarUsuario()" style="display:none">Eliminar</button>
+      {% endif %}
+      <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>window.currentUserId = "{{ session.get('user_id') }}";</script>
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+{% endblock %}
+

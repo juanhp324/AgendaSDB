@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Inicio — Agenda Salesiana{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}"/>
+{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Inspectoría Salesiana</div>
+    <h1 class="hero-title">Agenda de Casas Salesianas</h1>
+    <p class="hero-subtitle">Directorio oficial de las comunidades y obras salesianas. Encuentra información de contacto, historia y ubicación de cada casa.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('RCasas.casas') }}" class="btn btn-primary btn-lg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Explorar Casas
+      </a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card">
+      <div class="hero-icon">🏠</div>
+      <div class="hero-stats">
+        <div class="stat" id="statCasas">
+          <span class="stat-number" id="totalCasas">—</span>
+          <span class="stat-label">Casas registradas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feature-card">
+    <div class="feature-icon">📋</div>
+    <h3>Directorio Completo</h3>
+    <p>Nombre, dirección, teléfono, correo, web y ciudad de cada casa salesiana.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔍</div>
+    <h3>Búsqueda Rápida</h3>
+    <p>Filtra casas por nombre o ciudad en tiempo real.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📖</div>
+    <h3>Historia e Identidad</h3>
+    <p>Breve historia y datos del contacto responsable de cada comunidad.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+{% endblock %}
+

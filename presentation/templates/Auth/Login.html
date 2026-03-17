@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Institucional — Agenda Salesiana</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body class="auth-page">
+
+    <div class="auth-wrapper">
+        <aside class="auth-side-info">
+            <div class="info-content">
+                <div class="logo-white">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <h1>Portal de Enlace Salesiano</h1>
+                <p>Accede al directorio centralizado de casas y obras. Gestiona la información institucional de manera segura.</p>
+            </div>
+            <div class="info-footer">
+                <p>© 2026 Salesianos de Don Bosco</p>
+            </div>
+        </aside>
+
+        <main class="auth-side-form">
+            <div class="form-container">
+                <header class="form-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p>Introduce tus credenciales para continuar</p>
+                </header>
+
+                <div id="errorMsg" class="alert alert-error" style="display:none"></div>
+
+                <form class="main-form" id="loginForm" onsubmit="handleLogin(event)">
+
+                    <div class="input-group">
+                        <label for="email">Correo electrónico</label>
+                        <div class="input-field">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <input type="email" id="email" name="email" placeholder="usuario@salesianos.org" autocomplete="username" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <div class="input-field">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+
+
+                            <button type="button" class="btn-toggle-view" id="togglePass">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" name="remember"> <span>Recordar sesión</span>
+                        </label>
+                        <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <span>Entrar al Sistema</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </form>
+
+                <footer class="form-footer">
+                    <p>¿Problemas de acceso? <a href="#">Soporte TI</a></p>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Funcionalidad para mostrar/ocultar contraseña
+        const btn = document.getElementById('togglePass');
+        const input = document.getElementById('password');
+        btn.addEventListener('click', () => {
+            const isPass = input.type === 'password';
+            input.type = isPass ? 'text' : 'password';
+            btn.style.color = isPass ? 'var(--primary)' : '#9ca3af';
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+
+</html>

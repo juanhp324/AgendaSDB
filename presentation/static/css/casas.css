@@ -1,0 +1,165 @@
+/* ── PAGE HEADER ── */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--primary-light); }
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.page-title { font-size: 2.2rem; font-weight: 900; color: var(--secondary); letter-spacing: -1px; }
+.page-subtitle { color: var(--text-2); font-size: 1rem; margin-top: 4px; font-weight: 500; }
+
+/* ── SEARCH ── */
+.search-controls {
+  display: flex; gap: 20px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;
+}
+
+.search-bar {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 40px; padding: 12px 28px;
+  margin-bottom: 40px; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow);
+}
+.search-bar:focus-within { 
+  border-color: var(--primary); 
+  box-shadow: 0 0 0 4px rgba(220, 30, 70, 0.15); 
+  transform: translateY(-2px);
+}
+.search-bar svg { color: var(--text-3); flex-shrink: 0; }
+.search-input { border: none; outline: none; font-family: var(--font); font-size: 1rem; font-weight: 500; flex: 1; background: none; color: var(--text); }
+.search-input::placeholder { color: var(--text-3); }
+
+/* ── CARDS GRID ── */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px; }
+
+.casa-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+  overflow: hidden; cursor: pointer;
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow);
+}
+.casa-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); border-color: var(--primary-light); }
+.card-logo {
+  height: 200px; background: #fff;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.card-logo img { 
+  width: 100%; height: 100%; 
+  object-fit: cover; 
+  transition: transform 0.5s ease;
+}
+.casa-card:hover .card-logo img { transform: scale(1.1); }
+.logo-placeholder-icon { font-size: 4rem; opacity: 0.3; }
+.card-body { padding: 24px; }
+.card-title { font-size: 1.2rem; font-weight: 800; color: var(--secondary); margin-bottom: 12px; line-height: 1.4; }
+.card-meta { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text-2); margin-bottom: 8px; font-weight: 500; }
+.card-meta svg { color: var(--primary); opacity: 0.8; }
+.card-contact { 
+  font-size: .85rem; color: var(--primary); font-weight: 700; margin-top: 16px; 
+  padding: 8px 12px; background: var(--primary-light); border-radius: 8px; display: inline-block;
+}
+
+
+/* ── LOGO UPLOAD ── */
+.logo-upload-area {
+  border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 24px; cursor: pointer; text-align: center;
+  transition: border-color .2s, background .2s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  position: relative;
+}
+.logo-upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
+.logo-upload-area p { color: var(--text-3); font-size: .85rem; }
+
+.upload-click-area { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+
+.btn-remove-logo {
+  position: absolute; top: 10px; right: 10px; width: 24px; height: 24px;
+  background: var(--danger); color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  cursor: pointer; z-index: 5; transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(220, 30, 70, 0.4);
+}
+.btn-remove-logo:hover { transform: scale(1.1); background: #b01838; }
+
+#logoPlaceholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+/* ── PREMIUM DETAIL MODAL ── */
+.detail-modal-premium { border-radius: 28px !important; }
+
+.modal-header-hero { 
+  position: relative; height: 260px; display: flex; align-items: flex-end; padding: 32px; overflow: hidden;
+  border-bottom: 4px solid var(--primary);
+}
+
+.hero-bg { 
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  filter: blur(4px) brightness(0.7); transform: scale(1.1); transition: all 0.5s ease;
+}
+
+.modal-header-hero:hover .hero-bg { filter: blur(2px) brightness(0.8); transform: scale(1.05); }
+
+.hero-content { position: relative; z-index: 1; display: flex; align-items: center; gap: 24px; width: 100%; }
+
+.hero-logo-container { 
+  width: 130px; height: 130px; background: rgba(255, 255, 255, 0.95); border-radius: 24px; padding: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3);
+}
+.hero-logo-container img { width: 100%; height: 100%; object-fit: contain; border-radius: 12px; }
+
+.logo-placeholder-premium {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  background: var(--surface2); color: var(--primary); border-radius: 12px;
+  transition: all 0.3s;
+}
+.logo-placeholder-premium svg { opacity: 0.6; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+.modal-header-hero:hover .logo-placeholder-premium { transform: scale(1.05); color: var(--secondary); background: #fff; }
+
+.hero-text h2 { color: #fff; font-size: 1.8rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin: 0; transition: color 0.3s; }
+.hero-subtitle { color: rgba(255,255,255,0.9); font-weight: 500; font-size: 1.1rem; transition: color 0.3s; }
+
+/* No logo state adjustments */
+.modal-header-hero.no-logo .hero-text h2 { color: var(--secondary); text-shadow: none; }
+.modal-header-hero.no-logo .hero-subtitle { color: var(--text-2); }
+.modal-header-hero.no-logo .modal-close-hero { background: rgba(0,0,0,0.1); color: var(--secondary); }
+.modal-header-hero.no-logo .modal-close-hero:hover { background: var(--danger); color: #fff; }
+
+.modal-close-hero {
+  position: absolute; top: 20px; right: 20px; width: 36px; height: 36px;
+  background: rgba(0,0,0,0.3); color: #fff; border: none; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); z-index: 2; transition: all 0.2s;
+}
+.modal-close-hero:hover { background: var(--danger); transform: rotate(90deg); }
+
+.detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.info-group { display: flex; flex-direction: column; gap: 4px; }
+.info-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+.info-group span, .info-group a { font-size: 1rem; color: var(--secondary); font-weight: 600; }
+
+.contact-box { background: var(--surface2); padding: 16px; border-radius: 16px; border: 1px solid var(--border); }
+.contact-data { display: flex; align-items: center; gap: 10px; }
+.contact-name { font-weight: 700 !important; color: var(--primary) !important; }
+.contact-separator { color: var(--border); }
+
+/* History Toggle */
+.history-toggle-section { margin-top: 24px; }
+.btn-history-toggle {
+  width: 100%; padding: 14px; background: var(--primary-light); color: var(--primary);
+  border: 1.5px dashed var(--primary); border-radius: 16px; cursor: pointer;
+  font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-history-toggle:hover { background: var(--primary); color: #fff; border-style: solid; transform: translateY(-2px); }
+
+.history-content-hidden { 
+  max-height: 0; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0; margin-top: 0; padding: 0 16px;
+}
+.history-content-hidden.active { max-height: 500px; opacity: 1; margin-top: 20px; padding: 20px; background: var(--surface2); border-radius: 16px; border-left: 4px solid var(--primary); }
+
+@media (max-width: 768px) {
+  .modal-header-hero { height: auto; min-height: 200px; padding: 20px; }
+  .hero-content { flex-direction: column; text-align: center; }
+  .hero-logo-container { width: 80px; height: 80px; }
+  .detail-info-grid { grid-template-columns: 1fr; }
+}
