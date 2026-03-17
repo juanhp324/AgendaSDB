@@ -10,7 +10,7 @@
     <h1 class="page-title">Gestión de Usuarios</h1>
     <p class="page-subtitle">Administra los usuarios del sistema</p>
   </div>
-  {% if session.get('rol') == 'superadmin' %}
+  {% if session.get('rol') in ['admin', 'superadmin'] %}
   <button class="btn btn-primary" onclick="openUserModal()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -39,22 +39,52 @@
 
 <!-- MODAL DETALLE USUARIO -->
 <div class="modal-overlay" id="userDetailModal" onclick="closeUserDetailModal(event)">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="detalleUserNombre">Detalle de Usuario</h2>
-      <button class="modal-close" onclick="closeUserDetailModal()">✕</button>
+  <div class="modal detail-modal-premium">
+    <div class="modal-header-hero profile-header-premium">
+      <div class="hero-bg" id="userDetailHeroBg"></div>
+      <div class="hero-content">
+        <div class="hero-avatar-container" id="detalleUserAvatar">?</div>
+        <div class="hero-text">
+          <h2 id="detalleUserFullNombre">Cargando...</h2>
+          <span id="detalleUserRol" class="badge"></span>
+        </div>
+      </div>
+      <button class="modal-close-hero" onclick="closeUserDetailModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="user-detail-info">
-        <div class="detail-item"><strong>Nombre:</strong> <span id="detalleUserFullNombre"></span></div>
-        <div class="detail-item"><strong>Correo:</strong> <span id="detalleUserEmail"></span></div>
-        <div class="detail-item"><strong>Username:</strong> <code id="detalleUserUsername"></code></div>
-        <div class="detail-item"><strong>Rol:</strong> <span id="detalleUserRol" class="badge"></span></div>
+    <div class="modal-body profile-body-premium">
+      <div class="info-list-premium">
+        <div class="info-item-premium">
+          <div class="info-icon-premium">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="info-content-premium">
+            <label>Nombre Completo</label>
+            <span id="detalleUserNombreDisplay"></span>
+          </div>
+        </div>
+        <div class="info-item-premium">
+          <div class="info-icon-premium">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="info-content-premium">
+            <label>Correo Electrónico</label>
+            <span id="detalleUserEmail"></span>
+          </div>
+        </div>
+        <div class="info-item-premium">
+          <div class="info-icon-premium">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="info-content-premium">
+            <label>Nombre de Usuario</label>
+            <code id="detalleUserUsername"></code>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeUserDetailModal()">Cerrar</button>
-      {% if session.get('rol') == 'superadmin' %}
+      {% if session.get('rol') in ['admin', 'superadmin'] %}
       <button class="btn btn-primary" id="btnEditarUsuarioDesdeDetalle" onclick="abrirEdicionUsuarioDesdeDetalle()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

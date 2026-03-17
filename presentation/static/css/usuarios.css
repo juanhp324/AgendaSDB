@@ -97,3 +97,52 @@
 }
 
 
+
+/* ── PREMIUM DETAIL MODAL ── */
+.detail-modal-premium { border-radius: 28px !important; max-width: 500px !important; overflow: hidden; }
+
+.modal-header-hero { 
+  position: relative; height: 180px; display: flex; align-items: flex-end; padding: 24px; overflow: hidden;
+  border-bottom: 4px solid var(--primary);
+}
+
+.hero-bg { 
+  position: absolute; inset: 0; background: linear-gradient(135deg, var(--secondary) 0%, #1a2a4a 100%);
+  filter: blur(0px); transition: all 0.5s ease;
+}
+
+.hero-content { position: relative; z-index: 1; display: flex; align-items: center; gap: 20px; width: 100%; }
+
+.hero-avatar-container { 
+  width: 80px; height: 80px; background: var(--primary); color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900;
+  box-shadow: 0 8px 25px rgba(220, 30, 70, 0.5); border: 4px solid rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+
+.hero-text h2 { color: #fff; font-size: 1.5rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin: 0; }
+
+.modal-close-hero {
+  position: absolute; top: 15px; right: 15px; width: 32px; height: 32px;
+  background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); z-index: 2; transition: all 0.2s;
+}
+.modal-close-hero:hover { background: var(--danger); transform: rotate(90deg); }
+
+.profile-body-premium { padding: 32px !important; background: var(--surface); }
+
+.info-list-premium { display: flex; flex-direction: column; gap: 24px; }
+
+.info-item-premium { display: flex; align-items: center; gap: 20px; }
+
+.info-icon-premium { 
+    width: 44px; height: 44px; background: var(--primary-light); color: var(--primary);
+    display: flex; align-items: center; justify-content: center; border-radius: 12px;
+    flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.info-item-premium:hover .info-icon-premium { transform: scale(1.1) rotate(5deg); background: var(--primary); color: #fff; }
+
+.info-content-premium { display: flex; flex-direction: column; gap: 2px; }
+.info-content-premium label { font-size: 0.7rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
+.info-content-premium span, .info-content-premium code { font-size: 1.1rem; font-weight: 700; color: var(--secondary); word-break: break-all; }

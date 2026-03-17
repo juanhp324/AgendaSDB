@@ -32,13 +32,30 @@ function verDetalleUsuario(id) {
   if (!u) return;
   activeEditUser = u;
 
+  // Hero section
   document.getElementById('detalleUserFullNombre').textContent = u.nombre;
+  document.getElementById('detalleUserNombreDisplay').textContent = u.nombre;
   document.getElementById('detalleUserEmail').textContent = u.email;
   document.getElementById('detalleUserUsername').textContent = u.user;
   
+  const avatar = document.getElementById('detalleUserAvatar');
+  if (avatar) avatar.textContent = u.nombre[0].toUpperCase();
+
   const rolBadge = document.getElementById('detalleUserRol');
   rolBadge.textContent = u.rol;
   rolBadge.className = `badge badge-${u.rol}`;
+
+  // Fondo dinámico (Mesh gradient suave)
+  const heroBg = document.getElementById('userDetailHeroBg');
+  if (heroBg) {
+      const colors = [
+          ['#DC1E46', '#1A2A4A'], // SDB Red to Dark Blue
+          ['#1A2A4A', '#2c3e50'], 
+          ['#DC1E46', '#b01838']
+      ];
+      const pair = colors[Math.floor(Math.random() * colors.length)];
+      heroBg.style.background = `linear-gradient(135deg, ${pair[0]} 0%, ${pair[1]} 100%)`;
+  }
 
   document.getElementById('userDetailModal').classList.add('active');
 }
