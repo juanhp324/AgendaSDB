@@ -65,6 +65,10 @@ function verDetalleCasa(id) {
   document.getElementById('detalleCasaTelefonoContacto').textContent = c.telefono_contacto || '—';
   document.getElementById('detalleCasaHistoria').textContent = c.historia || 'Sin historia registrada.';
 
+  // Report button link
+  const reportBtn = document.getElementById('btnReporteCasa');
+  if (reportBtn) reportBtn.href = `/reporte_casa/${id}`;
+
   const logoImg = document.getElementById('detalleCasaLogo');
   const placeholder = document.getElementById('detalleCasaLogoPlaceholder');
   const heroBg = document.getElementById('detalleHeroBg');

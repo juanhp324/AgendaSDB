@@ -147,7 +147,7 @@ class PDF(FPDF):
         self.cell(0, 10, "CONGREGACIÓN SALESIANA", ln=True, align='L')
         
         self.set_font("helvetica", "", 10)
-        self.cell(0, 5, "INSPECTORÍA SAN LUCAS - VENEZUELA", ln=True, align='L')
+        self.cell(0, 5, "INSPECTORÍA SAN JUAN BOSCO - JARABACOA", ln=True, align='L')
         
         # Right-aligned Title
         self.set_y(10)
@@ -242,4 +242,102 @@ def reporte_casas():
         
     except Exception as exc:
         print(f"Error generando reporte: {exc}")
+        return "Error al generar el reporte", 500
+
+@bp.route('/reporte_casa/<casa_id>')
+def reporte_casa(casa_id):
+    try:
+        casa = MCasas.getCasaById(casa_id)
+        if not casa:
+            return "Casa no encontrada", 404
+            
+        # Create PDF instance
+        pdf = PDF()
+        pdf.alias_nb_pages()
+        pdf.add_page()
+        
+        # Report Date
+        pdf.set_font("helvetica", "I", 9)
+        pdf.set_text_color(100, 100, 100)
+        now = datetime.now().strftime("%d/%m/%Y %H:%M")
+        pdf.cell(0, 8, f"Ficha generada el: {now}", ln=True, align='R')
+        pdf.ln(5)
+        
+        # Title
+        pdf.set_font("helvetica", "B", 16)
+        pdf.set_text_color(44, 62, 80)
+        pdf.cell(0, 10, casa.get('nombre', 'Detalle de la Casa'), ln=True, align='C')
+        pdf.ln(10)
+        
+        # Info sections
+        pdf.set_font("helvetica", "B", 12)
+        pdf.set_fill_color(240, 240, 240)
+        pdf.cell(0, 10, "  Información General", ln=True, fill=True)
+        pdf.ln(2)
+        
+        pdf.set_font("helvetica", "", 10)
+        pdf.set_text_color(0, 0, 0)
+        
+        details = [
+            ("Ciudad:", casa.get('ciudad', '—')),
+            ("Teléfono:", casa.get('telefono', '—')),
+            ("Dirección:", casa.get('direccion', '—')),
+            ("Sitio Web:", casa.get('web', '—')),
+            ("Correo:", casa.get('correo', '—')),
+        ]
+        
+        for label, value in details:
+            pdf.set_font("helvetica", "B", 10)
+            pdf.cell(40, 8, label)
+            pdf.set_font("helvetica", "", 10)
+            pdf.cell(0, 8, str(value), ln=True)
+            
+        pdf.ln(5)
+        
+        # Contact section
+        pdf.set_font("helvetica", "B", 12)
+        pdf.set_fill_color(240, 240, 240)
+        pdf.cell(0, 10, "  Información de Contacto", ln=True, fill=True)
+        pdf.ln(2)
+        
+        pdf.set_font("helvetica", "B", 10)
+        pdf.cell(40, 8, "Persona:")
+        pdf.set_font("helvetica", "", 10)
+        pdf.cell(0, 8, str(casa.get('contacto', '—')), ln=True)
+        
+        pdf.set_font("helvetica", "B", 10)
+        pdf.cell(40, 8, "Teléfono:")
+        pdf.set_font("helvetica", "", 10)
+        pdf.cell(0, 8, str(casa.get('telefono_contacto', '—')), ln=True)
+        
+        pdf.ln(10)
+        
+        # History section
+        historia = casa.get('historia', '').strip()
+        if historia:
+            pdf.set_font("helvetica", "B", 12)
+            pdf.set_fill_color(240, 240, 240)
+            pdf.cell(0, 10, "  Reseña Histórica", ln=True, fill=True)
+            pdf.ln(4)
+            pdf.set_font("helvetica", "", 10)
+            pdf.multi_cell(0, 6, historia)
+            
+        # Buffer
+        output = io.BytesIO()
+        pdf_bytes = pdf.output()
+        output.write(pdf_bytes)
+        output.seek(0)
+        
+        clean_name = secure_filename(casa.get('nombre', 'Casa'))
+        filename = f"Reporte_{clean_name}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        return send_file(
+            output,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as exc:
+        print(f"Error generando reporte de casa: {exc}")
         return "Error al generar el reporte", 500

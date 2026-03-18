@@ -157,9 +157,53 @@
 }
 .history-content-hidden.active { max-height: 500px; opacity: 1; margin-top: 20px; padding: 20px; background: var(--surface2); border-radius: 16px; border-left: 4px solid var(--primary); }
 
+.modal-footer {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  gap: 16px;
+}
+
+.footer-left { display: flex; align-items: center; }
+.footer-right { display: flex; align-items: center; gap: 12px; }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-weight: 600;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  background: var(--surface2);
+  color: var(--secondary);
+}
+
+#btnReporteCasa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+#btnReporteCasa:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
 @media (max-width: 768px) {
   .modal-header-hero { height: auto; min-height: 200px; padding: 20px; }
   .hero-content { flex-direction: column; text-align: center; }
   .hero-logo-container { width: 80px; height: 80px; }
   .detail-info-grid { grid-template-columns: 1fr; }
+  .modal-footer { flex-direction: column; align-items: stretch; gap: 12px; }
+  .footer-right { flex-direction: column; }
 }
