@@ -8,7 +8,7 @@ def _get_col():
 
 def getUserByEmail(email):
     col = _get_col()
-    return col.find_one({"email": email}, {"email": 1, "password": 1, "rol": 1, "nombre": 1, "user": 1, "avatar": 1})
+    return col.find_one({"email": email}, {"email": 1, "password": 1, "rol": 1, "nombre": 1, "user": 1, "avatar": 1, "activo": 1})
 
 def getUserById(user_id):
     col = _get_col()

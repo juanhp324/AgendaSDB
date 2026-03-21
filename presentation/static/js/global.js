@@ -1,7 +1,99 @@
-/**
- * AgendaSDB - Global JavaScript
- * Handles topbar dropdowns, modals, and common UI interactions.
- */
+// --- Global Notification (Toast) System ---
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `premium-toast toast-${type}`;
+    
+    const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : '⚠');
+    
+    toast.innerHTML = `
+        <div class="toast-icon" style="font-size: 1.2rem; font-weight: 900;">${icon}</div>
+        <div class="toast-content">
+            <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto remove after 5s
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// --- Global Status Modal (Animated) ---
+function showStatusModal(type, customText = '') {
+    const modal = document.getElementById('statusModal');
+    const content = document.getElementById('statusContent');
+    if (!modal || !content) return;
+
+    let html = '';
+    let title = '';
+
+    if (type === 'saving') {
+        title = customText || 'Guardando cambios...';
+        html = `
+            <div class="loader-ring"></div>
+            <h2 style="margin: 0; color: var(--secondary); font-weight: 800; font-size: 1.5rem;">${title}</h2>
+            <p style="color: var(--text-3); margin: 0;">Un momento, por favor.</p>
+        `;
+    } else if (type === 'deleting') {
+        title = customText || 'Eliminando registro...';
+        html = `
+            <div class="loader-ring" style="border-top-color: var(--danger);"></div>
+            <h2 style="margin: 0; color: var(--danger); font-weight: 800; font-size: 1.5rem;">${title}</h2>
+            <p style="color: var(--text-3); margin: 0;">Eliminando permanentemente.</p>
+        `;
+    } else if (type === 'deactivating') {
+        title = customText || 'Desactivando usuario...';
+        html = `
+            <div class="pulse-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/></svg></div>
+            <h2 style="margin: 0; color: var(--accent); font-weight: 800; font-size: 1.5rem;">${title}</h2>
+            <p style="color: var(--text-3); margin: 0;">Suspensión temporal en progreso.</p>
+        `;
+    }
+
+    content.innerHTML = html;
+    modal.classList.add('active');
+}
+
+function closeStatusModal() {
+    const modal = document.getElementById('statusModal');
+    if (modal) modal.classList.remove('active');
+}
+
+// --- Global Confirm Modal ---
+let confirmCallback = null;
+
+function showConfirmModal(title, message, onConfirm, btnType = 'primary') {
+    const modal = document.getElementById('confirmModal');
+    if (!modal) return;
+
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    confirmCallback = onConfirm;
+
+    const btn = document.getElementById('confirmBtn');
+    // Sanitize classes before adding new ones
+    btn.className = `btn btn-${btnType === 'danger' ? 'danger' : 'primary'}`;
+    btn.onclick = () => {
+        closeConfirmModal();
+        if (confirmCallback) confirmCallback();
+    };
+
+    modal.classList.add('active');
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmModal');
+    if (modal) modal.classList.remove('active');
+}
 
 // --- Dropbox / User Menu ---
 function toggleUserMenu() {
@@ -11,8 +103,6 @@ function toggleUserMenu() {
     if (!dropdown || !btn) return;
     
     const isOpen = dropdown.classList.contains('open');
-    
-    // Close all other dropdowns if any (future proofing)
     
     if (isOpen) {
         dropdown.classList.remove('open');
@@ -34,61 +124,36 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// --- Profile Modal ---
-function openPerfilModal() {
-    const modal = document.getElementById('perfilDetalleModal');
+// --- Profile Modal & Logic ---
+async function openPerfilModal() {
+    const modal = document.getElementById('perfilModal');
     if (!modal) return;
     
-    fetch('/get_perfil')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('detallePerfilNombre').textContent = data.usuario.nombre || '—';
-                document.getElementById('detallePerfilNombreHeader').textContent = data.usuario.nombre || 'Mi Perfil';
-                document.getElementById('detallePerfilEmail').textContent = data.usuario.email || '—';
-                document.getElementById('detallePerfilUser').textContent = data.usuario.user || '—';
-                
-                const avatar = document.getElementById('detallePerfilAvatar');
-                if (avatar && data.usuario.nombre) {
-                    avatar.textContent = data.usuario.nombre[0].toUpperCase();
-                }
+    try {
+        const res = await fetch('/get_perfil');
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('perfil_nombre').value = data.usuario.nombre || '';
+            document.getElementById('perfil_email').value = data.usuario.email || '';
+            document.getElementById('perfil_user').value = data.usuario.user || '';
+            document.getElementById('perfil_rol').value = data.usuario.rol || '';
+            document.getElementById('perfil_password').value = '';
 
-                const rolBadge = document.getElementById('detallePerfilRolBadge');
-                if (rolBadge) {
-                    rolBadge.textContent = data.usuario.rol || 'user';
-                    rolBadge.className = `badge badge-${data.usuario.rol || 'user'}`;
-                }
-
-                // Pre-populate edit modal secretly
-                document.getElementById('perfil_nombre').value = data.usuario.nombre || '';
-                document.getElementById('perfil_email').value = data.usuario.email || '';
-                document.getElementById('perfil_user').value = data.usuario.user || '';
-                document.getElementById('perfil_rol').value = data.usuario.rol || '';
-                document.getElementById('perfil_password').value = '';
-
-                modal.classList.add('active');
-                document.getElementById('userDropdown').classList.remove('open');
-                document.getElementById('userMenuBtn').removeAttribute('data-open');
-            }
-        });
-}
-
-function closePerfilDetalleModal(e) {
-    if (!e || e.target.id === 'perfilDetalleModal') document.getElementById('perfilDetalleModal').classList.remove('active');
-}
-
-function abrirEdicionPerfilDesdeDetalle() {
-    closePerfilDetalleModal();
-    document.getElementById('perfilModal').classList.add('active');
+            modal.classList.add('active');
+            document.getElementById('userDropdown').classList.remove('open');
+            document.getElementById('userMenuBtn').removeAttribute('data-open');
+        } else {
+            showToast('No pudimos cargar tu perfil: ' + (data.message || 'Error del servidor'), 'error');
+        }
+    } catch (err) {
+        showToast("Error de red al intentar abrir el perfil.", "error");
+    }
 }
 
 function closePerfilModal(e) {
     const modal = document.getElementById('perfilModal');
     if (!modal) return;
-    
-    // If e is provided, check if click was on overlay
-    if (e && e.target !== modal) return;
-    
+    if (e && e.target !== modal && !e.target.classList.contains('modal-close') && !e.target.classList.contains('btn-ghost')) return;
     modal.classList.remove('active');
 }
 
@@ -98,10 +163,7 @@ async function guardarPerfil() {
     const user = document.getElementById('perfil_user').value;
     const password = document.getElementById('perfil_password').value;
     
-    const btn = document.querySelector('#perfilModal .btn-primary');
-    const originalText = btn.textContent;
-    btn.textContent = 'Guardando...';
-    btn.disabled = true;
+    showStatusModal('saving', 'Actualizando tu perfil...');
 
     try {
         const res = await fetch('/update_perfil', {
@@ -112,15 +174,14 @@ async function guardarPerfil() {
         
         const data = await res.json();
         if (data.success) {
-            location.reload(); // Reload to show new name/info
+            showToast('Perfil actualizado con éxito', 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert(data.message || 'Error al actualizar perfil');
+            closeStatusModal();
+            showToast(data.message || 'Error al actualizar perfil', 'error');
         }
     } catch (err) {
-        console.error(err);
-        alert('Error de conexión');
-    } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
+        closeStatusModal();
+        showToast('Error de conexión', 'error');
     }
 }

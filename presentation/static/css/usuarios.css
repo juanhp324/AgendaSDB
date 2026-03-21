@@ -146,3 +146,21 @@
 .info-content-premium { display: flex; flex-direction: column; gap: 2px; }
 .info-content-premium label { font-size: 0.7rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
 .info-content-premium span, .info-content-premium code { font-size: 1.1rem; font-weight: 700; color: var(--secondary); word-break: break-all; }
+
+/* ── INACTIVE USERS ── */
+.row-inactive {
+    background: #f8fafc !important;
+    opacity: 0.75;
+}
+.row-inactive:hover td {
+    background: #f1f5f9 !important;
+}
+.row-inactive .user-info-name {
+    text-decoration: line-through;
+    color: var(--text-3);
+}
+.row-inactive .table-avatar {
+    filter: grayscale(1);
+    opacity: 0.6;
+    box-shadow: none;
+}

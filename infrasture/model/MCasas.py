@@ -7,12 +7,16 @@ def _get_col():
     db = get_database()
     return db["casas"]
 
-def getAllCasas(query=None):
+def getAllCasas(query=None, tipo=None):
     col = _get_col()
     filtro = {}
     if query:
         pattern = re.compile(query, re.IGNORECASE)
-        filtro = {"$or": [{"nombre": pattern}, {"ciudad": pattern}]}
+        filtro["$or"] = [{"nombre": pattern}, {"obras.ciudad": pattern}, {"obras.nombre_obra": pattern}]
+    
+    if tipo and tipo != 'todos':
+        filtro["tipo"] = re.compile(f"^{tipo}$", re.IGNORECASE)
+        
     cursor = col.find(filtro).sort("_id", -1)
     result = list(cursor)
     cursor.close()

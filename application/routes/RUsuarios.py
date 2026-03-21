@@ -29,6 +29,7 @@ def get_usuarios():
                 'user': u.get('user', ''),
                 'rol': u.get('rol', ''),
                 'avatar': u.get('avatar', ''),
+                'activo': u.get('activo', True),
             })
         return jsonify({"success": True, "usuarios": result})
     except Exception as exc:
@@ -63,7 +64,7 @@ def update_usuario(user_id):
         # admin solo puede editar usuarios con rol 'user'
         if rol_actual == 'admin' and target_user.get('rol') in ['admin', 'superadmin']:
             return jsonify({"success": False, "message": "No puedes editar este usuario"}), 403
-        allowed = ['nombre', 'email', 'user', 'password', 'rol', 'avatar']
+        allowed = ['nombre', 'email', 'user', 'password', 'rol', 'avatar', 'activo']
         update_data = {k: v for k, v in data.items() if k in allowed and v != ''}
         
         # Impedir que un usuario se cambie el rol a sí mismo

@@ -10,7 +10,7 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "AgendaSDB")
 
 if not MONGODB_URI:
     print("[WARNING] MONGODB_URI no definida en .env. Usando localhost por defecto.")
-    MONGODB_URI = "mongodb://localhost:27017/"
+    MONGODB_URI = "mongodb://root:Servextex5252-@localhost:27017/?directConnection=true&readPreference=primary&replicaSet=rs0"
 
 
 CONNECTION_CONFIG = {

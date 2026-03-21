@@ -1,35 +1,75 @@
-let casasData = [];
+let tempObras = [];
+let activeCasaId = null;
+let activeObraId = null;
+let isEditingObraDirectly = false;
 
-async function cargarCasas(q='') {
+// --- Funciones Principales ---
+async function cargarCasas(q = '') {
   const grid = document.getElementById('casasGrid');
   if (!grid) return;
-  grid.innerHTML = '<div class="loading-spinner">Cargando...</div>';
-  const url = q ? `/get_casas?q=${encodeURIComponent(q)}` : '/get_casas';
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.success) { grid.innerHTML = '<p class="empty-state">Error al cargar datos</p>'; return; }
-  casasData = data.casas;
-  renderCasas(casasData);
+
+  grid.style.opacity = '0.5'; // Smooth transition start
+
+  const tipo = document.getElementById('genderFilter') ? document.getElementById('genderFilter').value : 'todos';
+  const url = new URL('/get_casas', window.location.origin);
+  if (q) url.searchParams.append('q', q);
+  if (tipo !== 'todos') url.searchParams.append('tipo', tipo);
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    grid.style.opacity = '1'; // Restore opacity
+    if (!data.success) {
+      grid.innerHTML = '<p class="empty-state">Error al cargar datos</p>';
+      showToast(data.message || 'Error al cargar casas', 'error');
+      return;
+    }
+    casasData = data.casas;
+    renderCasas(casasData);
+  } catch (err) {
+    grid.style.opacity = '1';
+    showToast('Error de conexión', 'error');
+  }
 }
 
 function renderCasas(casas) {
   const grid = document.getElementById('casasGrid');
-  if (!casas.length) { grid.innerHTML = '<p class="empty-state">No se encontraron casas</p>'; return; }
-  
-  grid.innerHTML = casas.map(c => `
-    <div class="casa-card" onclick="verDetalleCasa('${c._id}')">
-      <div class="card-logo">
-        ${c.logo_filename
-          ? `<img src="/static/uploads/logos/${c.logo_filename}" alt="${c.nombre}" onerror="this.parentElement.innerHTML='🏠'"/>`
-          : '<span class="logo-placeholder-icon">🏠</span>'}
+  if (!casas.length) { grid.innerHTML = '<p class="empty-state animate-fade-up">No se encontraron casas</p>'; return; }
+
+  const limitedCasas = casas.slice(0, 12);
+  grid.innerHTML = limitedCasas.map((c, index) => {
+    const delay = index * 0.05;
+    const genderIcon = c.tipo === 'femenino' ? '♀' : '♂';
+    const genderColor = c.tipo === 'femenino' ? '#ec4899' : '#3b82f6';
+
+    return `
+    <div class="casa-card animate-fade-up" style="animation-delay: ${delay}s; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);" onclick="verDetalleCasa('${c._id}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 20px 40px -5px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 25px -5px rgba(0,0,0,0.05)';">
+      <div style="height: 6px; background: ${genderColor};"></div>
+      <div style="padding: 24px; flex-grow: 1; display:flex; flex-direction:column;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px;">
+          <div style="width: 75px; height: 75px; border-radius: 16px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; padding: 6px; border: 1px solid #f1f5f9; flex-shrink:0;">
+            <img src="/static/img/logo_sdb.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap: 8px;">
+            <div style="display:flex; align-items:center; gap: 6px; background: #fff0f1; border: 1px solid rgba(220, 30, 70, 0.2); color: #DC1E46; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              ${c.obras ? c.obras.length : 0} Obras
+            </div>
+            <div style="font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" title="${c.tipo === 'femenino' ? 'Femenino' : 'Masculino'}">
+              ${genderIcon}
+            </div>
+          </div>
+        </div>
+        <h3 style="font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.3px;">${c.nombre}</h3>
+        <div class="casa-history-scroll">
+          ${c.historia || 'Sin historia registrada.'}
+        </div>
       </div>
-      <div class="card-body">
-        <h3 class="card-title">${c.nombre}</h3>
-        <p class="card-meta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${c.ciudad || '—'}</p>
-        <p class="card-meta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.48 2 2 0 0 1 3.58.67h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.1a16 16 0 0 0 6 6l.92-1.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.5 14.5z"/></svg> ${c.telefono || '—'}</p>
-        ${c.contacto ? `<p class="card-contact">Contacto: ${c.contacto}</p>` : ''}
+      <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+        <span style="color: #DC1E46; font-size: 0.85rem; font-weight: 700;">Ver detalles →</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function buscarCasas() {
@@ -37,213 +77,514 @@ function buscarCasas() {
   if (q.length > 1 || q.length === 0) cargarCasas(q);
 }
 
-let activeCasaId = null;
-
+// --- Modales Casa Detalle ---
 function verDetalleCasa(id) {
   const c = casasData.find(x => x._id === id);
   if (!c) return;
   activeCasaId = id;
 
   document.getElementById('detalleCasaNombre').textContent = c.nombre;
-  document.getElementById('detalleCasaCiudadHero').textContent = c.ciudad || '—';
-  document.getElementById('detalleCasaCiudad').textContent = c.ciudad || '—';
-  document.getElementById('detalleCasaTelefono').textContent = c.telefono || '—';
-  document.getElementById('detalleCasaDireccion').textContent = c.direccion || '—';
-  
-  const webLink = document.getElementById('detalleCasaWeb');
-  if (c.web) {
-    webLink.href = c.web.startsWith('http') ? c.web : `https://${c.web}`;
-    webLink.textContent = c.web;
+  document.getElementById('detalleCasaHistoria').textContent = c.historia || 'Sin historia registrada.';
+
+  // Badge Tipo
+  const badge = document.getElementById('detalleCasaTipoBadge');
+  if (badge) {
+    badge.textContent = c.tipo === 'femenino' ? '♀ Femenino' : '♂ Masculino';
+    badge.style.background = c.tipo === 'femenino' ? '#fdf2f8' : '#eff6ff';
+    badge.style.color = c.tipo === 'femenino' ? '#db2777' : '#2563eb';
+  }
+
+  // Report button link
+  const reportBtn = document.getElementById('btnReporteCasa');
+  if (reportBtn) reportBtn.href = `/reporte_casa/${id}`;
+
+  // Reset search
+  document.getElementById('searchInputObras').value = '';
+  renderObrasDetalleGrid(c.obras || []);
+
+  document.getElementById('casaDetalleModal').classList.add('active');
+}
+
+function renderObrasDetalleGrid(obras) {
+  const grid = document.getElementById('detalleObrasGrid');
+  if (!grid) return;
+
+  if (!obras || obras.length === 0) {
+    grid.innerHTML = '<p class="empty-state animate-fade-up">No hay obras registradas para esta casa.</p>';
+    return;
+  }
+
+  // Asegurar que el grid tenga la clase correcta
+  grid.className = 'detalle-obras-grid';
+
+  const limitedObras = obras.slice(0, 12);
+  grid.innerHTML = limitedObras.map((o, idx) => {
+    const delay = idx * 0.05;
+    const telfs = Array.isArray(o.telefono) ? o.telefono : (o.telefono ? [o.telefono] : []);
+    const dispTelf = telfs.length > 0 ? telfs[0] : '—';
+    const extraTelfs = telfs.length > 1 ? ` (+${telfs.length - 1} más)` : '';
+
+    return `
+      <div class="obra-card-premium animate-fade-up" style="animation-delay: ${delay}s;" onclick="verDetalleObra('${o.id}')">
+        <div class="obra-card-accent"></div>
+        <div class="obra-card-body">
+          <h4 class="obra-card-title">${o.nombre_obra}</h4>
+          
+          <div class="obra-card-info">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC1E46" stroke-width="2.5"><circle cx="12" cy="10" r="3"/><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg> 
+            <span>${o.ciudad || '—'}</span>
+          </div>
+          
+          <div class="obra-card-info">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.48 2 2 0 0 1 3.58.67h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.1a16 16 0 0 0 6 6l.92-1.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.5 14.5z"/></svg>
+            <span>${dispTelf}${extraTelfs}</span>
+          </div>
+        </div>
+        <div class="obra-card-footer">
+          <span>Ver ficha completa</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function buscarObrasDetalle() {
+  const c = casasData.find(x => x._id === activeCasaId);
+  if (!c) return;
+  const q = document.getElementById('searchInputObras').value.toLowerCase().trim();
+  const obras = c.obras || [];
+  const filtradas = q ? obras.filter(o => (o.nombre_obra || '').toLowerCase().includes(q) || (o.ciudad || '').toLowerCase().includes(q)) : obras;
+  renderObrasDetalleGrid(filtradas);
+}
+
+function closeCasaDetalleModal(e) {
+  if (e && e.target.id !== 'casaDetalleModal') return;
+  document.getElementById('casaDetalleModal').classList.remove('active');
+}
+
+// --- Modales Obra Detalle ---
+function verDetalleObra(obraId) {
+  const c = casasData.find(x => x._id === activeCasaId);
+  if (!c) return;
+  const o = (c.obras || []).find(x => x.id === obraId);
+  if (!o) return;
+  activeObraId = obraId;
+
+  document.getElementById('detalleObraNombre').textContent = o.nombre_obra;
+  document.getElementById('detalleObraCiudad').textContent = o.ciudad || '—';
+  document.getElementById('detalleObraApartadoPostal').textContent = o.apartado_postal || '—';
+
+  const telfs = Array.isArray(o.telefono) ? o.telefono : (o.telefono ? [o.telefono] : []);
+  document.getElementById('detalleObraTelefonos').innerHTML = telfs.map(t => `<span>${t}</span>`).join('') || '—';
+
+  document.getElementById('detalleObraDireccion').textContent = o.direccion || '—';
+
+  const webLink = document.getElementById('detalleObraWeb');
+  if (o.web) {
+    webLink.href = o.web.startsWith('http') ? o.web : `https://${o.web}`;
+    webLink.textContent = o.web;
     webLink.style.display = 'inline';
   } else {
     webLink.textContent = '—';
     webLink.href = '#';
   }
 
-  document.getElementById('detalleCasaCorreo').textContent = c.correo || '—';
-  document.getElementById('detalleCasaContacto').textContent = c.contacto || '—';
-  document.getElementById('detalleCasaTelefonoContacto').textContent = c.telefono_contacto || '—';
-  document.getElementById('detalleCasaHistoria').textContent = c.historia || 'Sin historia registrada.';
+  document.getElementById('detalleObraCorreo').textContent = o.correo || '—';
+  document.getElementById('detalleObraContacto').textContent = o.contacto || '—';
+  document.getElementById('detalleObraTelefonoContacto').textContent = o.telefono_contacto || '—';
 
   // Report button link
-  const reportBtn = document.getElementById('btnReporteCasa');
-  if (reportBtn) reportBtn.href = `/reporte_casa/${id}`;
+  const reportBtn = document.getElementById('btnReporteObra');
+  if (reportBtn) reportBtn.href = `/reporte_obra/${activeCasaId}/${obraId}`;
 
-  const logoImg = document.getElementById('detalleCasaLogo');
-  const placeholder = document.getElementById('detalleCasaLogoPlaceholder');
-  const heroBg = document.getElementById('detalleHeroBg');
-  const heroHeader = document.querySelector('.modal-header-hero');
-  
-  if (c.logo_filename) {
-    const logoSrc = `/static/uploads/logos/${c.logo_filename}`;
-    logoImg.src = logoSrc;
-    logoImg.style.display = 'block';
-    placeholder.style.display = 'none';
-    heroBg.style.backgroundImage = `linear-gradient(rgba(44, 62, 80, 0.4), rgba(44, 62, 80, 0.9)), url('${logoSrc}')`;
-    if (heroHeader) heroHeader.classList.remove('no-logo');
-  } else {
-    logoImg.style.display = 'none';
-    placeholder.style.display = 'flex';
-    if (heroHeader) heroHeader.classList.add('no-logo');
-    // Premium Mesh Gradient Placeholder
-    heroBg.style.backgroundImage = `
-      radial-gradient(at 0% 0%, rgba(220, 30, 70, 0.4) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, rgba(44, 62, 80, 0.4) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(220, 30, 70, 0.4) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(44, 62, 80, 0.6) 0px, transparent 50%),
-      #f8f9fa
-    `;
-  }
-
-  // Reset historia
-  const histContainer = document.getElementById('detalleCasaHistoriaContainer');
-  histContainer.classList.remove('active');
-  const toggleBtnText = document.getElementById('historyToggleText');
-  const toggleBtnIcon = document.getElementById('historyToggleIcon');
-  toggleBtnText.textContent = 'Ver Historia';
-  toggleBtnIcon.textContent = '📖';
-
-  document.getElementById('casaDetalleModal').classList.add('active');
+  document.getElementById('obraDetalleModal').classList.add('active');
 }
 
-function toggleHistoriaDetalle() {
-  const container = document.getElementById('detalleCasaHistoriaContainer');
-  const btnText = document.getElementById('historyToggleText');
-  const btnIcon = document.getElementById('historyToggleIcon');
-  
-  const isActive = container.classList.toggle('active');
-  btnText.textContent = isActive ? 'Ocultar Historia' : 'Ver Historia';
-  btnIcon.textContent = isActive ? '📕' : '📖';
+function closeObraDetalleModal(e) {
+  if (e && e.target.id !== 'obraDetalleModal') return;
+  document.getElementById('obraDetalleModal').classList.remove('active');
 }
 
-function closeCasaDetalleModal(e) {
-  if (!e || e.target.id === 'casaDetalleModal') document.getElementById('casaDetalleModal').classList.remove('active');
+function abrirEdicionObraDesdeDetalle() {
+  if (!activeObraId) return;
+  closeObraDetalleModal();
+  closeCasaDetalleModal();
+
+  isEditingObraDirectly = true;
+
+  const c = casasData.find(x => x._id === activeCasaId);
+  const o = c.obras.find(x => x.id === activeObraId);
+
+  openObraModal(o.id, o);
 }
 
+// --- Modales Casa Form ---
 function abrirEdicionDesdeDetalle() {
   if (!activeCasaId) return;
   closeCasaDetalleModal();
   openEditCasa(activeCasaId);
 }
 
-function openCasaModal(c=null) {
-  document.getElementById('casa_id').value = '';
-  document.getElementById('modalCasaTitle').textContent = 'Nueva Casa Salesiana';
-  ['nombre','telefono','ciudad','direccion','web','correo','contacto','telefono_contacto','historia','logo_filename'].forEach(f => {
-    const el = document.getElementById('casa_'+f);
-    if(el) el.value = c ? (c[f]||'') : '';
-  });
-  document.getElementById('logoPreview').style.display = 'none';
-  document.getElementById('logoPlaceholder').style.display = 'flex';
-  document.getElementById('btnQuitarLogo').style.display = 'none';
+function openCasaModal(c = null) {
+  document.getElementById('casa_id').value = c ? c._id : '';
+  document.getElementById('modalCasaTitle').textContent = c ? 'Editar Casa Salesiana' : 'Nueva Casa Salesiana';
+
+  document.getElementById('casa_nombre').value = c ? (c.nombre || '') : '';
+  document.getElementById('casa_historia').value = c ? (c.historia || '') : '';
+  setGender(c ? (c.tipo || 'masculino') : 'masculino');
+
+  // Clone obras array
+  tempObras = c && c.obras ? JSON.parse(JSON.stringify(c.obras)) : [];
+  renderFormObrasList();
+
   document.getElementById('btnEliminarCasa').style.display = 'none';
   document.getElementById('casaModal').classList.add('active');
 }
 
 function openEditCasa(id) {
-  const c = casasData.find(x=>x._id===id);
-  if(!c) return;
+  const c = casasData.find(x => x._id === id);
+  if (!c) return;
   openCasaModal(c);
-  document.getElementById('casa_id').value = id;
-  document.getElementById('modalCasaTitle').textContent = 'Editar Casa Salesiana';
-  if(c.logo_filename){
-    const preview = document.getElementById('logoPreview');
-    preview.src = `/static/uploads/logos/${c.logo_filename}`;
-    preview.style.display = 'block';
-    document.getElementById('logoPlaceholder').style.display = 'none';
-    document.getElementById('btnQuitarLogo').style.display = 'flex';
-  } else {
-    document.getElementById('btnQuitarLogo').style.display = 'none';
-  }
-  
-  if (['admin','superadmin'].includes(window.userRol)) {
+  if (['admin', 'superadmin'].includes(window.userRol)) {
     document.getElementById('btnEliminarCasa').style.display = 'inline-flex';
   }
 }
 
 function closeCasaModal(e) {
-  if(!e || e.target.id==='casaModal') document.getElementById('casaModal').classList.remove('active');
+  if (e && e.target.id !== 'casaModal') return;
+  document.getElementById('casaModal').classList.remove('active');
 }
 
-function previewLogo(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const preview = document.getElementById('logoPreview');
-    preview.src = e.target.result;
-    preview.style.display = 'block';
-    document.getElementById('logoPlaceholder').style.display = 'none';
-    document.getElementById('btnQuitarLogo').style.display = 'flex';
+// --- Modales Obra Form (Interno al crear/editar Casa) ---
+function renderFormObrasList() {
+  const container = document.getElementById('formObrasList');
+  if (!container) return;
+
+  if (!tempObras.length) {
+    container.innerHTML = '<p style="font-size:0.9rem; color:#888; text-align:center; padding:10px 0;">No hay obras añadidas aún.</p>';
+    return;
+  }
+
+  container.innerHTML = tempObras.map(o => `
+        <div class="form-obra-card animate-fade-up">
+            <div class="form-obra-info">
+                <div class="form-obra-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M9 21V9l3-3 3 3v12"/><path d="M2 21h4V12h3"/><path d="M15 12h3v9h4"/></svg>
+                </div>
+                <div class="form-obra-text">
+                    <span class="form-obra-name">${o.nombre_obra}</span>
+                    <span class="form-obra-meta">${o.ciudad || 'Sin ciudad'}</span>
+                </div>
+            </div>
+            <div class="form-obra-actions">
+                <button type="button" class="btn btn-ghost btn-icon-sq" title="Editar Obra" onclick="openObraModal('${o.id}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button type="button" class="btn btn-danger btn-icon-sq" title="Eliminar Obra" onclick="eliminarObraTemp('${o.id}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openObraModal(obraId = null, directObraObj = null) {
+  if (!directObraObj) {
+    isEditingObraDirectly = false;
+  }
+
+  const o = directObraObj || (obraId ? tempObras.find(x => x.id === obraId) : null);
+
+  document.getElementById('modalObraTitle').textContent = o ? 'Editar Obra' : 'Agregar Obra';
+  document.getElementById('obra_temp_id').value = o ? o.id : '';
+
+  document.getElementById('obra_nombre').value = o ? (o.nombre_obra || '') : '';
+  document.getElementById('obra_apartado_postal').value = o ? (o.apartado_postal || '') : '';
+  document.getElementById('obra_ciudad').value = o ? (o.ciudad || '') : '';
+  document.getElementById('obra_direccion').value = o ? (o.direccion || '') : '';
+  document.getElementById('obra_web').value = o ? (o.web || '') : '';
+  document.getElementById('obra_correo').value = o ? (o.correo || '') : '';
+  document.getElementById('obra_contacto').value = o ? (o.contacto || '') : '';
+  document.getElementById('obra_telefono_contacto').value = o ? (o.telefono_contacto || '') : '';
+
+  // Handle multiple phones
+  const phoneContainer = document.getElementById('obraPhonesContainer');
+  phoneContainer.innerHTML = '';
+  const telfs = o && Array.isArray(o.telefono) ? o.telefono : (o && o.telefono ? [o.telefono] : []);
+  if (telfs.length === 0) {
+    addPhoneInput();
+  } else {
+    telfs.forEach(t => addPhoneInput(t));
+  }
+
+  document.getElementById('obraModal').classList.add('active');
+}
+
+function addPhoneInput(val = '') {
+  const container = document.getElementById('obraPhonesContainer');
+  const div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.innerHTML = `
+    <input type="text" class="form-input obra-phone-input" value="${val}" placeholder="+58 212 000 0000" style="flex:1;"/>
+    <button type="button" class="btn btn-danger" style="width: 44px; height: 44px; flex-shrink:0; border-radius: 12px; display:flex; align-items:center; justify-content:center; padding:0;" onclick="removePhoneInput(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  `;
+  container.appendChild(div);
+}
+
+function removePhoneInput(btn) {
+  const container = document.getElementById('obraPhonesContainer');
+  if (container.children.length > 1) {
+    btn.parentElement.remove();
+  } else {
+    btn.parentElement.querySelector('input').value = '';
+  }
+}
+
+function closeObraModal(e) {
+  if (e && e.target.id !== 'obraModal') return;
+  document.getElementById('obraModal').classList.remove('active');
+}
+
+async function guardarObraInterna() {
+  const n_obra = document.getElementById('obra_nombre').value.trim();
+  if (!n_obra) { alert('El nombre de la Obra es obligatorio'); return; }
+
+  const telfInputs = document.querySelectorAll('.obra-phone-input');
+  const telfs = Array.from(telfInputs).map(i => i.value.trim()).filter(v => v !== '');
+
+  const data = {
+    nombre_obra: n_obra,
+    telefono: telfs,
+    apartado_postal: document.getElementById('obra_apartado_postal').value.trim(),
+    ciudad: document.getElementById('obra_ciudad').value.trim(),
+    direccion: document.getElementById('obra_direccion').value.trim(),
+    web: document.getElementById('obra_web').value.trim(),
+    correo: document.getElementById('obra_correo').value.trim(),
+    contacto: document.getElementById('obra_contacto').value.trim(),
+    telefono_contacto: document.getElementById('obra_telefono_contacto').value.trim(),
   };
-  reader.readAsDataURL(file);
-  uploadLogo(file);
+
+  const currentId = document.getElementById('obra_temp_id').value;
+
+  // Si estamos editando directamente desde el detalle de la obra:
+  if (isEditingObraDirectly) {
+    data.id = currentId || 'obra_' + Date.now();
+    const c = casasData.find(x => x._id === activeCasaId);
+
+    const payload = {
+      nombre: c.nombre,
+      historia: c.historia,
+      obras: JSON.parse(JSON.stringify(c.obras || []))
+    };
+
+    const idx = payload.obras.findIndex(x => x.id === data.id);
+    if (idx > -1) {
+      payload.obras[idx] = data;
+    } else {
+      payload.obras.push(data);
+    }
+
+    const btn = document.querySelector('#obraModal .btn-primary');
+    const originalText = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch(`/update_casa/${activeCasaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const resData = await res.json();
+      btn.disabled = false; btn.textContent = originalText;
+
+      if (resData.success) {
+        closeObraModal();
+        cargarCasas();
+        if (window.showToast) showToast('Obra actualizada exitosamente en la base de datos', 'success');
+      } else {
+        if (window.showToast) showToast(resData.message || 'Error al guardar la obra', 'error');
+      }
+    } catch (e) {
+      btn.disabled = false; btn.textContent = originalText;
+      console.error(e);
+    }
+    return;
+  }
+
+  // Flujo normal dentro del modal principal de Casa
+  if (currentId) {
+    const idx = tempObras.findIndex(x => x.id === currentId);
+    if (idx > -1) {
+      data.id = currentId;
+      tempObras[idx] = data;
+    }
+  } else {
+    data.id = 'obra_' + Date.now() + Math.floor(Math.random() * 1000);
+    tempObras.push(data);
+  }
+
+  renderFormObrasList();
+  closeObraModal();
 }
 
-function quitarLogoSeleccionado(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('casa_logo_filename').value = '';
-  document.getElementById('logoPreview').style.display = 'none';
-  document.getElementById('logoPreview').src = '';
-  document.getElementById('logoPlaceholder').style.display = 'flex';
-  document.getElementById('btnQuitarLogo').style.display = 'none';
-  document.getElementById('logoFile').value = '';
+function eliminarObraTemp(id) {
+  showConfirmModal(
+    '¿Eliminar Obra?',
+    '¿Estás seguro de que deseas quitar esta obra de la lista temporal?',
+    () => {
+      tempObras = tempObras.filter(x => x.id !== id);
+      renderFormObrasList();
+      showToast('Obra removida de la lista', 'success');
+    },
+    'danger'
+  );
 }
 
-async function uploadLogo(file) {
-  const formData = new FormData();
-  formData.append('logo', file);
-  const res = await fetch('/upload_logo', {method:'POST', body: formData});
-  const data = await res.json();
-  if(data.success) document.getElementById('casa_logo_filename').value = data.filename;
-}
-
+// --- API Calls Guardar/Eliminar Casa ---
 async function guardarCasa() {
   const id = document.getElementById('casa_id').value;
-  const payload = {
-    nombre: document.getElementById('casa_nombre').value.trim(),
-    telefono: document.getElementById('casa_telefono').value.trim(),
-    ciudad: document.getElementById('casa_ciudad').value.trim(),
-    direccion: document.getElementById('casa_direccion').value.trim(),
-    web: document.getElementById('casa_web').value.trim(),
-    correo: document.getElementById('casa_correo').value.trim(),
-    contacto: document.getElementById('casa_contacto').value.trim(),
-    telefono_contacto: document.getElementById('casa_telefono_contacto').value.trim(),
-    historia: document.getElementById('casa_historia').value.trim(),
-    logo_filename: document.getElementById('casa_logo_filename').value.trim(),
-  };
-  if (!payload.nombre) { alert('El nombre es obligatorio'); return; }
+  const nombre = document.getElementById('casa_nombre').value.trim();
+  const historia = document.getElementById('casa_historia').value.trim();
 
-  const btn = document.getElementById('btnGuardarCasa');
-  btn.disabled = true; btn.textContent = 'Guardando...';
+  if (!nombre) {
+    showToast('El nombre de la Casa es obligatorio', 'warning');
+    return;
+  }
+
+  const payload = {
+    nombre: nombre,
+    historia: historia,
+    tipo: document.getElementById('casa_tipo').value,
+    obras: tempObras
+  };
+
+  showStatusModal('saving', id ? 'Actualizando casa...' : 'Creando nueva casa...');
 
   const url = id ? `/update_casa/${id}` : '/create_casa';
   const method = id ? 'PUT' : 'POST';
-  const res = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  const data = await res.json();
-  btn.disabled = false; btn.textContent = 'Guardar';
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    closeStatusModal();
 
-  if(data.success) { 
-    closeCasaModal(); 
-    cargarCasas(); 
-    if (window.showToast) showToast(data.message, 'success'); 
+    if (data.success) {
+      closeCasaModal();
+      cargarCasas();
+      showToast(data.message, 'success');
+    }
+    else {
+      showToast(data.message || 'Error', 'error');
+    }
+  } catch (e) {
+    closeStatusModal();
+    showToast('Error de conexión', 'error');
+    console.error(e);
   }
-  else if (window.showToast) showToast(data.message || 'Error', 'error');
 }
 
 async function eliminarCasa() {
   const id = document.getElementById('casa_id').value;
-  if(!id || !confirm('¿Estás seguro de eliminar esta casa?')) return;
-  const res = await fetch(`/delete_casa/${id}`, {method:'DELETE'});
-  const data = await res.json();
-  if(data.success) { 
-    closeCasaModal(); 
-    cargarCasas(); 
-    if (window.showToast) showToast(data.message, 'success'); 
-  }
-  else if (window.showToast) showToast(data.message || 'Error al eliminar', 'error');
+  if (!id) return;
+
+  showConfirmModal(
+    '¿Eliminar Casa Entrera?',
+    '¿Estás seguro de eliminar esta casa entera con todas sus obras? Esta acción es irreversible.',
+    async () => {
+      showStatusModal('deleting', 'Eliminando registro de la casa...');
+      try {
+        const res = await fetch(`/delete_casa/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        closeStatusModal();
+        if (data.success) {
+          closeCasaModal();
+          cargarCasas();
+          showToast(data.message, 'success');
+        }
+        else showToast(data.message || 'Error al eliminar', 'error');
+      } catch (e) {
+        closeStatusModal();
+        showToast('Error de red', 'error');
+        console.error(e);
+      }
+    },
+    'danger'
+  );
 }
 
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    cargarCasas();
+  cargarCasas();
+  initCustomSelect();
 });
+
+function initCustomSelect() {
+  const trigger = document.getElementById('genderSelectTrigger');
+  const dropdown = document.getElementById('genderDropdown');
+  const hiddenInput = document.getElementById('genderFilter');
+  const selectedText = document.getElementById('selectedGenderText');
+  const options = document.querySelectorAll('.gender-option');
+
+  if (!trigger || !dropdown) return;
+
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.style.visibility === 'visible';
+
+    dropdown.style.opacity = isOpen ? '0' : '1';
+    dropdown.style.visibility = isOpen ? 'hidden' : 'visible';
+    dropdown.style.transform = isOpen ? 'translateY(-10px)' : 'translateY(0)';
+    trigger.style.borderColor = isOpen ? '#e2e8f0' : '#DC1E46';
+    trigger.style.boxShadow = isOpen ? '0 2px 4px rgba(0,0,0,0.02)' : '0 4px 15px rgba(220, 30, 70, 0.12)';
+  };
+
+  options.forEach(opt => {
+    opt.onclick = () => {
+      const val = opt.getAttribute('data-value');
+      const text = opt.innerHTML; // Use innerHTML to keep the icon if present
+
+      hiddenInput.value = val;
+      selectedText.innerHTML = text; // Match the trigger display
+
+      dropdown.style.opacity = '0';
+      dropdown.style.visibility = 'hidden';
+      dropdown.style.transform = 'translateY(-10px)';
+      trigger.style.borderColor = '#e2e8f0';
+
+      cargarCasas();
+    };
+  });
+
+  document.addEventListener('click', () => {
+    if (!dropdown) return;
+    dropdown.style.opacity = '0';
+    dropdown.style.visibility = 'hidden';
+    dropdown.style.transform = 'translateY(-10px)';
+    trigger.style.borderColor = '#e2e8f0';
+  });
+}
+
+function setGender(val) {
+  const input = document.getElementById('casa_tipo');
+  if (!input) return;
+
+  input.value = val;
+
+  const btnMale = document.getElementById('genderBtnMale');
+  const btnFemale = document.getElementById('genderBtnFemale');
+
+  if (val === 'masculino') {
+    btnMale.classList.add('active');
+    btnFemale.classList.remove('active');
+  } else {
+    btnFemale.classList.add('active');
+    btnMale.classList.remove('active');
+  }
+}
+

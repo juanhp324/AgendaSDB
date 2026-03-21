@@ -1,5 +1,5 @@
 import infrasture.model.MAuth as MAuth
-from flask import url_for, redirect, session, request
+from flask import url_for, redirect, session, request, flash, jsonify
 
 PUBLIC_ENDPOINTS = ['RAuth.show_login_form', 'RAuth.Login', 'RAuth.logout']
 PROTECTED_ENDPOINTS = [
@@ -23,6 +23,14 @@ class authValidator:
         if request.endpoint in PUBLIC_ENDPOINTS:
             return
         if 'user_id' not in session:
+            return redirect(url_for('RAuth.show_login_form'))
+        
+        user = MAuth.getUserById(session['user_id'])
+        if not user:
+            session.clear()
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": "Sesión inválida o cuenta eliminada. Inicia sesión de nuevo."}), 401
+            flash("Tu sesión es inválida o tu cuenta fue eliminada. Por favor, inicia sesión de nuevo.", "danger")
             return redirect(url_for('RAuth.show_login_form'))
 
     def index(self):
@@ -51,6 +59,10 @@ class loginValidator:
         self.userData = MAuth.getUserByEmail(self.email)
         if not self.userData:
             raise LookupError("Usuario no encontrado")
+        
+        # Verificar si el usuario está activo
+        if self.userData.get("activo") is False:
+            raise PermissionError("Tu cuenta ha sido desactivada. Contacta al administrador.")
 
     def check_password(self):
         if self.password != self.userData["password"]:

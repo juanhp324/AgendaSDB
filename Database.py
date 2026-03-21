@@ -10,129 +10,110 @@ Uso:
 from pymongo import MongoClient
 from datetime import datetime
 import os
+import uuid
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
 
 load_dotenv()
 
-MONGODB_URI = os.getenv("MONGODB_URI")
-if not MONGODB_URI:
-    MONGODB_URI = "mongodb://localhost:27017/"
+# Configuración de MongoDB
+MONGODB_URI = os.getenv("MONGODB_URI") or "mongodb://root:Servextex5252-@localhost:27017/"
+DATABASE_NAME = os.getenv("DATABASE_NAME") or "AgendaSDB"
 
 cluster = MongoClient(MONGODB_URI)
-db = cluster["AgendaSDB"]
+db = cluster[DATABASE_NAME]
 
-# ── Limpiar colecciones ──
+print("=" * 50)
+print(f"Iniciando limpieza de la base de datos: {DATABASE_NAME}")
+print("=" * 50)
+
+# --- Limpieza de Base de Datos ---
 db.usuarios.delete_many({})
 db.casas.delete_many({})
 
-# ── Usuarios de prueba ──
-db.usuarios.insert_many([
+# --- Usuarios ---
+usuarios_seed = [
     {
         "nombre": "Super Administrador",
         "email": "super@salesiano.com",
-        "user": "superadmin",
         "password": "super123",
         "rol": "superadmin",
+        "user": "superadmin",
         "avatar": ""
     },
     {
-        "nombre": "Juan Admin",
+        "nombre": "Administrador Local",
         "email": "admin@salesiano.com",
-        "user": "admin",
         "password": "admin123",
         "rol": "admin",
+        "user": "admin",
         "avatar": ""
     },
     {
-        "nombre": "Maria Usuario",
+        "nombre": "Usuario Consulta",
         "email": "user@salesiano.com",
-        "user": "maria",
         "password": "user123",
         "rol": "user",
+        "user": "user",
         "avatar": ""
-    },
-])
+    }
+]
 
-# ── Casas Salesianas de muestra ──
-db.casas.insert_many([
-    {
-        "nombre": "Casa Salesiana Don Bosco - Caracas",
-        "telefono": "+58 212 461 1234",
-        "direccion": "Av. Páez, El Paraíso, Caracas 1020",
-        "web": "https://salesianos.ve",
-        "correo": "caracas@salesiano.com",
-        "ciudad": "Caracas",
-        "historia": "Fundada en 1894, fue la primera presencia salesiana en Venezuela. Ha formado generaciones de jóvenes en el espíritu de Don Bosco.",
-        "logo_filename": "",
-        "contacto": "P. Carlos González",
-        "telefono_contacto": "+58 414 121 0000",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    },
-    {
-        "nombre": "Instituto San Francisco de Sales - Valencia",
-        "telefono": "+58 241 820 5678",
-        "direccion": "Av. Bolívar Norte, Valencia, Carabobo",
-        "web": "https://ifsvalencia.edu.ve",
-        "correo": "valencia@salesiano.com",
-        "ciudad": "Valencia",
-        "historia": "Obra educativa con más de 60 años de historia, ofreciendo educación integral a jóvenes de la región centro-norte del país.",
-        "logo_filename": "",
-        "contacto": "P. Miguel Ángel Torres",
-        "telefono_contacto": "+58 424 452 0000",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    },
-    {
-        "nombre": "Oratorio Salesiano San Juan Bosco - Maracaibo",
-        "telefono": "+58 261 793 9012",
-        "direccion": "Calle 72 con Av. 17, Maracaibo, Zulia",
-        "web": "",
-        "correo": "maracaibo@salesiano.com",
-        "ciudad": "Maracaibo",
-        "historia": "Casa de presencia salesiana en el Zulia dedicada a la atención de jóvenes en situación de riesgo mediante oratorio, talleres y deporte.",
-        "logo_filename": "",
-        "contacto": "P. José Ramírez",
-        "telefono_contacto": "+58 426 621 0000",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    },
-    {
-        "nombre": "Centro Salesiano La Rinconada - Mérida",
-        "telefono": "+58 274 263 3456",
-        "direccion": "Prolongación Av. 2, El Llano, Mérida",
-        "web": "https://salesianosmérida.com",
-        "correo": "merida@salesiano.com",
-        "ciudad": "Mérida",
-        "historia": "Establecida en los años 60, la casa salesiana de Mérida integra educación formal, pastoral juvenil y trabajo comunitario en los Andes venezolanos.",
-        "logo_filename": "",
-        "contacto": "P. Antonio Vivas",
-        "telefono_contacto": "+58 416 574 0000",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    },
-    {
-        "nombre": "Liceo Salesiano Padre Ojeda - Barquisimeto",
-        "telefono": "+58 251 252 7890",
-        "direccion": "Carrera 19 con Calle 36, Barquisimeto, Lara",
-        "web": "",
-        "correo": "barquisimeto@salesiano.com",
-        "ciudad": "Barquisimeto",
-        "historia": "Institución educativa salesiana que lleva el nombre del primer salesiano venezolano ordenado sacerdote, P. Cruz María Ojeda.",
-        "logo_filename": "",
-        "contacto": "P. Reinaldo Morales",
-        "telefono_contacto": "+58 412 513 0000",
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    },
-])
+db.usuarios.insert_many(usuarios_seed)
 
-print("=" * 50)
+# --- Casas y Obras ---
+def generar_obras(ciudad_base, count=8):
+    obras = []
+    tipos = ["Colegio", "Oratorio", "Centro Juvenil", "Parroquia", "Escuela Técnica", "Casa de Retiro", "Misión", "Residencia"]
+    for i in range(count):
+        tipo = tipos[i % len(tipos)]
+        obras.append({
+            "id": str(uuid.uuid4()),
+            "nombre_obra": f"{tipo} {i+1}",
+            "ciudad": ciudad_base,
+            "telefono": f"+58 2{i}2 {1000 + i}",
+            "direccion": f"Calle {i+1}, Sector {ciudad_base}",
+            "correo": f"obra{i+1}@salesiano.org",
+            "contacto": f"Hno. Juan {i+1}",
+            "telefono_contacto": f"+58 414 {5000 + i}"
+        })
+    return obras
+
+casas_data = [
+    ("Casa Salesiana Don Bosco", "Caracas", "masculino", "Casa matriz en la capital."),
+    ("Instituto Salesiano San José", "Valencia", "masculino", "Referente en educación técnica."),
+    ("Oratorio San Juan Bosco", "Maracaibo", "masculino", "Atención a la juventud zuliana."),
+    ("Colegio María Auxiliadora", "San Cristóbal", "femenino", "Tradición femenina en los Andes."),
+    ("Misión Salesiana Amazonas", "Puerto Ayacucho", "masculino", "Compromiso con pueblos indígenas."),
+    ("UE Sor Eusebia Palomino", "Barquisimeto", "femenino", "Formación integral mariana."),
+    ("Centro Juvenil La Vega", "Caracas", "masculino", "Deporte y valores."),
+    ("Colegio Madre Mazzarello", "Coro", "femenino", "Presencia en el occidente."),
+    ("Instituto San Javier", "Mérida", "masculino", "Excelencia académica."),
+    ("Casa Laura Vicuña", "Los Teques", "femenino", "Espiritualidad juvenil."),
+    ("Parroquia María Auxiliadora", "Boleíta", "masculino", "Centro espiritual."),
+    ("Unidad Educativa Santa Marta", "Maracay", "femenino", "Educación básica de calidad."),
+    ("Oratorio San Miguel", "Cumaná", "masculino", "Arte y comunidad."),
+    ("Colegio Inmaculada", "Barcelona", "femenino", "Centenario de servicio."),
+    ("Residencia San Felipe Neri", "Caracas", "masculino", "Hogar para estudiantes.")
+]
+
+casas_seed = []
+for nombre, ciudad, tipo, historia in casas_data:
+    casas_seed.append({
+        "nombre": nombre,
+        "historia": historia,
+        "tipo": tipo,
+        "obras": generar_obras(ciudad, 8),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    })
+
+db.casas.insert_many(casas_seed)
+
+print("-" * 50)
 print("✅ Base de datos inicializada correctamente")
-print("=" * 50)
-print("\nUsuarios de prueba:")
-print("  superadmin@salesiano.com / super123  (superadmin)")
-print("  admin@salesiano.com      / admin123  (admin)")
-print("  user@salesiano.com       / user123   (user)")
-print(f"\nCasas insertadas: {db.casas.count_documents({})}")
+print(f"   - Usuarios: {db.usuarios.count_documents({})}")
+print(f"   - Casas: {db.casas.count_documents({})}")
+print(f"   - Obras por casa: 8")
+print("-" * 50)
 cluster.close()
