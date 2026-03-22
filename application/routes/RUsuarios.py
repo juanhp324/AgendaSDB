@@ -1,6 +1,7 @@
 from flask import render_template, request, Blueprint, jsonify, session
 import infrasture.model.MAuth as MAuth
 from domain.VPermisos import requiere_permiso, tiene_permiso
+from werkzeug.security import generate_password_hash
 
 bp = Blueprint('RUsuarios', __name__)
 
@@ -47,6 +48,10 @@ def create_usuario():
         # solo superadmin puede crear admin/superadmin
         if data['rol'] in ['admin', 'superadmin'] and session.get('rol') != 'superadmin':
             return jsonify({"success": False, "message": "Solo superadmin puede crear admins"}), 403
+        
+        # Hashear contraseña
+        data['password'] = generate_password_hash(data['password'])
+        
         result = MAuth.createUsuario(data)
         return jsonify({"success": True, "message": "Usuario creado", "usuario_id": str(result.inserted_id)}), 201
     except Exception as exc:
@@ -72,8 +77,10 @@ def update_usuario(user_id):
             del update_data['rol']
             
         # impedir que admin cambie rol a admin/superadmin
-        if rol_actual == 'admin' and update_data.get('rol') in ['admin', 'superadmin']:
-            return jsonify({"success": False, "message": "No puedes asignar ese rol"}), 403
+        # Hashear contraseña si se está actualizando
+        if 'password' in update_data:
+            update_data['password'] = generate_password_hash(update_data['password'])
+            
         result = MAuth.updateUsuario(user_id, update_data)
         if result.modified_count > 0:
             return jsonify({"success": True, "message": "Usuario actualizado"})

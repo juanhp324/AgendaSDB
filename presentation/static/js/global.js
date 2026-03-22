@@ -1,3 +1,20 @@
+// --- CSRF Fetch Wrapper ---
+const originalFetch = window.fetch;
+window.fetch = function(url, options = {}) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const method = (options.method || 'GET').toUpperCase();
+    
+    // Solo agregar el header en métodos que cambian el estado
+    if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+        options.headers = options.headers || {};
+        // No sobrescribir si ya existe (para evitar conflictos con headers manuales)
+        if (!options.headers['X-CSRF-Token']) {
+            options.headers['X-CSRF-Token'] = csrfToken;
+        }
+    }
+    return originalFetch(url, options);
+};
+
 // --- Global Notification (Toast) System ---
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
@@ -184,4 +201,15 @@ async function guardarPerfil() {
         closeStatusModal();
         showToast('Error de conexión', 'error');
     }
+}
+
+// ── DARK MODE ──
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    // Animate button
+    const btn = document.getElementById('themeToggle');
+    if (btn) { btn.style.transform = 'scale(1.2) rotate(20deg)'; setTimeout(() => btn.style.transform = '', 250); }
 }

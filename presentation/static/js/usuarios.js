@@ -227,4 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('usersBody')) {
         cargarUsuarios();
     }
+    
+    // Move modals to body to escape .main-content stacking context
+    ['userModal', 'userDetailModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+    });
 });

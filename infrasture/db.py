@@ -9,8 +9,9 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "AgendaSDB")
 
 if not MONGODB_URI:
+    # Use a generic localhost URI if no environment variable is provided
     print("[WARNING] MONGODB_URI no definida en .env. Usando localhost por defecto.")
-    MONGODB_URI = "mongodb://root:Servextex5252-@localhost:27017/?directConnection=true&readPreference=primary&replicaSet=rs0"
+    MONGODB_URI = "mongodb://localhost:27017/?directConnection=true"
 
 
 CONNECTION_CONFIG = {
@@ -27,10 +28,16 @@ CONNECTION_CONFIG = {
     "waitQueueTimeoutMS": 5000
 }
 
+from infrasture.safety import CircuitBreaker, ServiceUnavailableError
+
 _client = None
 _db = None
 _lock = threading.Lock()
 
+# Circuit Breaker para proteger la conexión a la base de datos
+db_circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=30)
+
+@db_circuit_breaker
 def get_database():
     global _client, _db
 

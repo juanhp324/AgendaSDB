@@ -144,11 +144,11 @@ class PDF(FPDF):
         self.set_x(33)
         self.set_font("helvetica", "B", 12)
         self.set_text_color(44, 62, 80) # SDB Blue
-        self.cell(0, 6, "CONGREGACIÓN SALESIANA", ln=True, align='L')
+        self.cell(0, 6, "CONDOR, La Vega R.D.", ln=True, align='L')
         
         self.set_x(33)
         self.set_font("helvetica", "", 10)
-        self.cell(0, 5, "INSPECTORÍA SAN JUAN BOSCO - JARABACOA", ln=True, align='L')
+        self.cell(0, 5, "Diocesis de La Vega", ln=True, align='L')
         
         # Right-aligned Title
         self.set_y(12)
@@ -172,7 +172,25 @@ class PDF(FPDF):
 @bp.route('/reporte_casas')
 def reporte_casas():
     try:
-        casas_list = MCasas.getAllCasas()
+        casas_list_raw = MCasas.getAllCasas()
+        
+        # 1. Agrupar casas por tipo (Solo Masculino y Femenino como pidió el usuario)
+        labels = {
+            'masculino': 'CASAS MASCULINAS (SDB)',
+            'femenino': 'CASAS FEMENINAS (FMA / HH.SS.)'
+        }
+        
+        grupos = {
+            'masculino': [],
+            'femenino': []
+        }
+        
+        for c in casas_list_raw:
+            t = str(c.get('tipo', 'masculino')).lower()
+            if t == 'femenino':
+                grupos['femenino'].append(c)
+            else:
+                grupos['masculino'].append(c)
         
         # Create PDF instance
         pdf = PDF()
@@ -190,68 +208,90 @@ def reporte_casas():
         cols = ["Nombre de la Obra", "Ciudad", "Teléfono", "Contacto"]
         w = [60, 35, 40, 55] # Widths for columns
         
-        for c in casas_list:
-            nombre_casa = c.get('nombre', '').strip()
-            obras = c.get('obras', [])
+        # 2. Iterar por grupos
+        first_group = True
+        for tipo, casas in grupos.items():
+            if not casas:
+                continue
+                
+            # Siempre iniciar un nuevo grupo en una página nueva para dividir claramente
+            if not first_group:
+                pdf.add_page()
+            first_group = False
             
-            # 1. Casa Header Row (Full Width)
-            pdf.set_font("helvetica", "B", 10)
-            pdf.set_fill_color(44, 62, 80) # SDB Blue
-            pdf.set_text_color(255, 255, 255)
-            pdf.cell(sum(w), 9, f" CASA: {nombre_casa.upper()}", border=1, ln=True, fill=True, align='L')
+            # Título de Sección (Grupo)
+            pdf.set_font("helvetica", "B", 16)
+            pdf.set_text_color(220, 30, 70) # SDB Red
+            pdf.cell(0, 12, labels.get(tipo, tipo.upper()), ln=True, align='C')
+            pdf.set_draw_color(220, 30, 70)
+            pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 190, pdf.get_y())
+            pdf.ln(8)
             
-            # 2. Sub-header for Columns
-            pdf.set_font("helvetica", "B", 9)
-            pdf.set_fill_color(220, 30, 70) # SDB Red
-            pdf.set_text_color(255, 255, 255)
-            for i in range(len(cols)):
-                pdf.cell(w[i], 8, cols[i], border=1, fill=True, align='C')
-            pdf.ln()
-            
-            # 3. Obras Rows
-            pdf.set_font("helvetica", "", 9)
-            pdf.set_text_color(0, 0, 0)
-            
-            if not obras:
-                pdf.set_fill_color(255, 255, 255)
-                pdf.cell(w[0], 8, " (Sin obras registradas)", border=1, fill=True)
-                pdf.cell(w[1], 8, "—", border=1, fill=True, align='C')
-                pdf.cell(w[2], 8, "—", border=1, fill=True, align='C')
-                pdf.cell(w[3], 8, "—", border=1, fill=True, align='C')
+            for c in casas:
+                nombre_casa = c.get('nombre', '').strip()
+                obras = c.get('obras', [])
+                
+                # --- LÓGICA DE PAGINACIÓN SMART ---
+                # Calcular altura necesaria: 
+                # Cabecera Casa(9) + Subcabecera(8) + (Num Obras * 8) + Margen(5)
+                # Si no hay obras, cuenta como 1 fila de "Sin obras"
+                num_filas = len(obras) if obras else 1
+                altura_bloque = 9 + 8 + (num_filas * 8) + 5
+                
+                # Si el bloque supera el espacio disponible (trigger en ~270mm para A4)
+                if pdf.get_y() + altura_bloque > 275:
+                    pdf.add_page()
+                
+                # 3. Casa Header Row (Full Width)
+                pdf.set_font("helvetica", "B", 10)
+                pdf.set_fill_color(44, 62, 80) # SDB Blue
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(sum(w), 9, f" CASA: {nombre_casa.upper()}", border=1, ln=True, fill=True, align='L')
+                
+                # 4. Sub-header for Columns
+                pdf.set_font("helvetica", "B", 9)
+                pdf.set_fill_color(220, 30, 70) # SDB Red
+                pdf.set_text_color(255, 255, 255)
+                for i in range(len(cols)):
+                    pdf.cell(w[i], 8, cols[i], border=1, fill=True, align='C')
                 pdf.ln()
-            else:
-                fill = False
-                for o in obras:
-                    if fill:
-                        pdf.set_fill_color(248, 249, 250)
-                    else:
-                        pdf.set_fill_color(255, 255, 255)
-                    
-                    nombre_obra = (o.get('nombre_obra') or '—')[:40]
-                    # Ciudad + Apartado Postal
-                    ap = o.get('apartado_postal')
-                    ciudad_text = o.get('ciudad') or '—'
-                    if ap:
-                        ciudad_text = f"{ciudad_text} (AP: {ap})"
-                    ciudad = str(ciudad_text)[:20]
-                    
-                    # Teléfono(s)
-                    telfs = o.get('telefono', [])
-                    if isinstance(telfs, list):
-                        tel = ", ".join([str(t) for t in telfs])[:20]
-                    else:
-                        tel = str(telfs)[:20] if telfs else "—"
-                        
-                    cont = (o.get('contacto') or '—')[:30]
-                    
-                    pdf.cell(w[0], 8, f" {nombre_obra}", border=1, fill=True)
-                    pdf.cell(w[1], 8, ciudad, border=1, fill=True, align='C')
-                    pdf.cell(w[2], 8, tel, border=1, fill=True, align='C')
-                    pdf.cell(w[3], 8, cont, border=1, fill=True)
+                
+                # 5. Obras Rows
+                pdf.set_font("helvetica", "", 9)
+                pdf.set_text_color(0, 0, 0)
+                
+                if not obras:
+                    pdf.set_fill_color(255, 255, 255)
+                    pdf.cell(w[0], 8, " (Sin obras registradas)", border=1, fill=True)
+                    pdf.cell(w[1], 8, "—", border=1, fill=True, align='C')
+                    pdf.cell(w[2], 8, "—", border=1, fill=True, align='C')
+                    pdf.cell(w[3], 8, "—", border=1, fill=True, align='C')
                     pdf.ln()
-                    fill = not fill
-            
-            pdf.ln(4) # Space between Casas
+                else:
+                    fill = False
+                    for o in obras:
+                        # Zebra striping
+                        pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
+                        
+                        nombre_obra = (o.get('nombre_obra') or '—')[:40]
+                        ap = o.get('apartado_postal')
+                        ciudad_text = o.get('ciudad') or '—'
+                        if ap:
+                            ciudad_text = f"{ciudad_text} (AP: {ap})"
+                        ciudad = str(ciudad_text)[:20]
+                        
+                        telfs = o.get('telefono', [])
+                        tel = ", ".join([str(t) for t in telfs])[:20] if isinstance(telfs, list) else str(telfs)[:20]
+                        cont = (o.get('contacto') or '—')[:30]
+                        
+                        pdf.cell(w[0], 8, f" {nombre_obra}", border=1, fill=True)
+                        pdf.cell(w[1], 8, ciudad, border=1, fill=True, align='C')
+                        pdf.cell(w[2], 8, tel, border=1, fill=True, align='C')
+                        pdf.cell(w[3], 8, cont, border=1, fill=True)
+                        pdf.ln()
+                        fill = not fill
+                
+                pdf.ln(4) # Space between Casas
             
         # Output to buffer
         # Output PDF as a stream

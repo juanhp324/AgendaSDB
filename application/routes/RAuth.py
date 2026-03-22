@@ -1,7 +1,7 @@
 from flask import render_template, request, Blueprint, jsonify, redirect, url_for, session
 import infrasture.model.MAuth as MAuth
 import domain.VAuth as VAuth
-import os
+from werkzeug.security import generate_password_hash
 
 bp = Blueprint('RAuth', __name__)
 
@@ -30,7 +30,14 @@ def Login():
     if data.get('remember'):
         session.permanent = True
 
-    return jsonify(login.redirect_user()), 200
+    response = login.redirect_user()
+    response["user_info"] = {
+        "nombre": userData.get("nombre", "Usuario"),
+        "avatar": userData.get("avatar", ""),
+        "email": userData.get("email", "")
+    }
+
+    return jsonify(response), 200
 
 
 @bp.route('/logout')
@@ -64,6 +71,11 @@ def update_perfil():
     update_data = {k: v for k, v in data.items() if k in allowed and v}
     if not update_data:
         return jsonify({"success": False, "message": "Sin datos para actualizar"}), 400
+    
+    # Hashear contraseña si se está actualizando
+    if 'password' in update_data:
+        update_data['password'] = generate_password_hash(update_data['password'])
+        
     result = MAuth.updateUsuario(user_id, update_data)
     # Actualizar sesión si cambió nombre
     if 'nombre' in update_data:

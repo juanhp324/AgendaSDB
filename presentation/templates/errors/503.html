@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container" style="text-align: center; padding: 100px 20px;">
+    <div class="error-card glass" style="max-width: 500px; margin: 0 auto; padding: 40px; border-radius: 20px;">
+        <i class="fas fa-plug-circle-exclamation" style="font-size: 64px; color: var(--accent); margin-bottom: 20px;"></i>
+        <h1 style="font-size: 2.5rem; margin-bottom: 15px;">503</h1>
+        <h2 style="font-size: 1.5rem; margin-bottom: 20px;">Servicio No Disponible</h2>
+        <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 30px;">
+            Lo sentimos, la conexión con la base de datos está experimentando problemas técnicos. 
+            El sistema ha activado una protección automática (**Circuit Breaker**) para evitar mayores fallos. 
+            Por favor, intenta de nuevo en unos momentos.
+        </p>
+        <a href="{{ url_for('RAuth.show_login_form') }}" class="btn-primary" style="display: inline-block; padding: 12px 30px; border-radius: 10px; text-decoration: none; transition: 0.3s;">
+            <i class="fas fa-redo"></i> Reintentar
+        </a>
+    </div>
+</div>
+{% endblock %}

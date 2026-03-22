@@ -38,26 +38,26 @@
     </div>
     
     <!-- Filtro de Género Custom Premium -->
-    <div class="custom-select-container" style="position: relative; min-width: 180px; font-family: var(--font);">
-      <div id="genderSelectTrigger" class="custom-select-trigger" style="display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 0 16px; height: 46px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="color: #64748b; font-size: 1.1rem; display: flex; align-items: center;">
+    <div class="custom-select-container">
+      <div id="genderSelectTrigger" class="custom-select-trigger">
+        <div class="cs-trigger-left">
+          <div class="cs-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <span id="selectedGenderText" style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">Todos los géneros</span>
+          <span id="selectedGenderText" class="cs-label">Todos los géneros</span>
         </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: #94a3b8;"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg class="cs-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       
-      <div id="genderDropdown" class="custom-select-options" style="position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 15px 30px rgba(0,0,0,0.1); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; overflow: hidden; padding: 6px;">
-        <div class="gender-option" data-value="todos" style="padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #475569;" onmouseover="this.style.background='#f8fafc'; this.style.color='#1e293b';" onmouseout="this.style.background='transparent'; this.style.color='#475569';">
-          <span style="width: 20px; text-align: center; opacity: 0.5;">●</span> Todos los géneros
+      <div id="genderDropdown" class="custom-select-options">
+        <div class="gender-option" data-value="todos">
+          <span class="gender-symbol">●</span> Todos los géneros
         </div>
-        <div class="gender-option" data-value="masculino" style="padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #475569;" onmouseover="this.style.background='#eff6ff'; this.style.color='#2563eb';" onmouseout="this.style.background='transparent'; this.style.color='#475569';">
-          <span style="color: #3b82f6; width: 20px; text-align: center;">♂</span> Masculino
+        <div class="gender-option" data-value="masculino">
+          <span class="gender-symbol male">♂</span> Masculino
         </div>
-        <div class="gender-option" data-value="femenino" style="padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #475569;" onmouseover="this.style.background='#fdf2f8'; this.style.color='#db2777';" onmouseout="this.style.background='transparent'; this.style.color='#475569';">
-          <span style="color: #ec4899; width: 20px; text-align: center;">♀</span> Femenino
+        <div class="gender-option" data-value="femenino">
+          <span class="gender-symbol female">♀</span> Femenino
         </div>
       </div>
       <input type="hidden" id="genderFilter" value="todos">
@@ -70,49 +70,51 @@
 <!-- MODAL DETALLE CASA -->
 <div class="modal-overlay" id="casaDetalleModal">
   <div class="modal modal-lg">
-    <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding: 48px 40px; display:flex; flex-direction:column; align-items:center; text-align:center; gap: 24px; position:relative;">
+    <div class="modal-header modal-header-compact">
       
-      <div style="width: 110px; height: 110px; background: #fff; border-radius: 50%; display:flex; align-items:center; justify-content:center; padding: 18px; flex-shrink:0; border: 1px solid rgba(220, 30, 70, 0.1); box-shadow: 0 8px 30px rgba(220, 30, 70, 0.12);">
-          <img src="/static/img/logo_sdb.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(220, 30, 70, 0.25));">
+      <div class="modal-logo-circle">
+          <img src="/static/img/logo_sdb.png" alt="Logo">
       </div>
       
-      <div style="flex-grow: 1; display:flex; flex-direction:column; align-items:center;">
-        <h2 id="detalleCasaNombre" style="color:#0f172a; font-size:2.4rem; font-weight:900; margin:0; line-height:1.1; letter-spacing:-1.2px; max-width: 650px;"></h2>
-        <div style="margin-top: 14px;">
-          <span id="detalleCasaTipoBadge" style="display:inline-block; padding: 6px 16px; border-radius:30px; font-size:0.85rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.03);"></span>
+      <div class="modal-header-text-area">
+        <h2 id="detalleCasaNombre" class="modal-title-premium"></h2>
+        <div style="margin-top: 8px;">
+          <span id="detalleCasaTipoBadge" class="badge-premium"></span>
         </div>
       </div>
 
-      <button class="modal-close" style="position:absolute; top: 24px; right: 24px;" onclick="closeCasaDetalleModal()">✕</button>
+      <button class="modal-close" onclick="closeCasaDetalleModal()">✕</button>
     </div>
-    <div class="modal-body" style="background:#fafafa; padding: 40px; overflow-y: auto;">
+    <div class="modal-body modal-body-premium">
       
-      <!-- Historia Container (Refinado) -->
-      <div style="margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid #e2e8f0;">
-          <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            Nuestra Historia
+      <!-- Historia Container (Refinado y Expandido) -->
+      <div class="history-section-premium">
+          <h3 class="history-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            NUESTRA HISTORIA
           </h3>
-          <p id="detalleCasaHistoria" style="color:#334155; font-size:1.1rem; line-height:1.7; font-weight: 400; margin:0; letter-spacing: 0.1px;"></p>
+          <p id="detalleCasaHistoria" class="history-text-premium"></p>
       </div>
 
       <div class="obras-section" style="margin-top: 10px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-           <h3 style="color:#0f172a; font-size:1.4rem; margin:0; font-weight:800; letter-spacing:-0.4px;">Obras Vinculadas</h3>
-           <div style="background:#fff; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; padding: 0 16px; width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;" onfocusin="this.style.borderColor='#DC1E46'; this.style.boxShadow='0 0 0 3px rgba(220, 30, 70, 0.1)';" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';" >
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5">
+           <h3 style="color:var(--text); font-size:1.4rem; margin:0; font-weight:800; letter-spacing:-0.4px;">Obras Vinculadas</h3>
+           <div style="background:var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; padding: 0 16px; width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;" onfocusin="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(220, 30, 70, 0.1)';" onfocusout="this.style.borderColor='var(--border)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';" >
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2.5">
                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
              </svg>
-             <input type="text" id="searchInputObras" placeholder="Filtrar por nombre..." oninput="buscarObrasDetalle()" style="border:none; outline:none; font-size:0.9rem; padding: 12px; width:100%; color:#1e293b; background:transparent;"/>
+             <input type="text" id="searchInputObras" placeholder="Filtrar por nombre..." oninput="buscarObrasDetalle()" style="border:none; outline:none; font-size:0.9rem; padding: 12px; width:100%; color:var(--text); background:transparent;"/>
            </div>
         </div>
+
         
         <div id="detalleObrasGrid" class="cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
         </div>
       </div>
     </div>
 
-    <div class="modal-footer" style="background:#fff; border-top:1px solid #f1f5f9; padding: 24px 40px;">
+    <div class="modal-footer">
+
       <div class="footer-left">
         <a id="btnReporteCasa" href="#" class="btn btn-secondary" style="border-radius:12px; padding:10px 20px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -139,55 +141,55 @@
 <!-- MODAL DETALLE OBRA -->
 <div class="modal-overlay" id="obraDetalleModal">
   <div class="modal" style="max-width: 600px; border-radius: 24px;">
-    <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding: 24px 32px; display:flex; align-items:center; gap: 16px;">
-      <div style="width: 48px; height: 48px; background: #f1f5f9; border-radius: 12px; display:flex; align-items:center; justify-content:center; color:#DC1E46; flex-shrink:0;">
+    <div class="modal-header">
+      <div class="modal-icon-container">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M9 17h6"/><path d="M4 17h1v4H4zm15 0h1v4h-1z"/><path d="M10 3h4v4h-4z"/></svg>
       </div>
-      <h2 id="detalleObraNombre" style="color:#0f172a; font-size:1.4rem; font-weight:800; margin:0; letter-spacing:-0.3px;">Detalle de Obra</h2>
-      <button class="modal-close" style="margin-left:auto;" onclick="closeObraDetalleModal()">✕</button>
+      <h2 id="detalleObraNombre" class="modal-title-main">Detalle de Obra</h2>
+      <button class="modal-close" onclick="closeObraDetalleModal()">✕</button>
     </div>
-    <div class="modal-body" style="background:#fafafa; padding: 32px;">
+    <div class="modal-body">
       <div class="detail-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <div class="info-group">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Ciudad</label>
-          <span id="detalleObraCiudad" style="color:#334155; font-weight:600; font-size:1rem;"></span>
+          <label>Ciudad</label>
+          <span id="detalleObraCiudad"></span>
         </div>
         <div class="info-group">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Teléfonos</label>
-          <div id="detalleObraTelefonos" style="color:#334155; font-weight:600; font-size:1rem; display: flex; flex-direction: column; gap: 4px;"></div>
+          <label>Teléfonos</label>
+          <div id="detalleObraTelefonos" class="info-value-list"></div>
         </div>
         <div class="info-group">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Apartado Postal</label>
-          <span id="detalleObraApartadoPostal" style="color:#334155; font-weight:600; font-size:1rem;"></span>
+          <label>Apartado Postal</label>
+          <span id="detalleObraApartadoPostal"></span>
         </div>
-        <div class="info-group" style="grid-column: span 2;">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Dirección Física</label>
-          <span id="detalleObraDireccion" style="color:#334155; font-weight:500; font-size:1rem; line-height:1.5;"></span>
-        </div>
-        <div class="info-group">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Sitio Web</label>
-          <a id="detalleObraWeb" href="#" target="_blank" style="color:#DC1E46; font-weight:700; text-decoration:none; font-size:0.95rem;"></a>
+        <div class="info-group col-full">
+          <label>Dirección Física</label>
+          <span id="detalleObraDireccion"></span>
         </div>
         <div class="info-group">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:4px;">Correo</label>
-          <span id="detalleObraCorreo" style="color:#334155; font-weight:600; font-size:1rem;"></span>
+          <label>Sitio Web</label>
+          <a id="detalleObraWeb" href="#" target="_blank" class="info-link"></a>
+        </div>
+        <div class="info-group">
+          <label>Correo</label>
+          <span id="detalleObraCorreo"></span>
         </div>
         
-        <div style="grid-column: span 2; background:#fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-top: 8px;">
-          <label style="color:#94a3b8; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1.2px; margin-bottom:12px; display:block;">Persona de Contacto</label>
-          <div style="display:flex; align-items:center; gap: 12px;">
-            <div style="width:40px; height:40px; background:#f8fafc; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#64748b;">
+        <div class="contact-card-inline">
+          <label>Persona de Contacto</label>
+          <div class="contact-card-content">
+            <div class="contact-avatar-small">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
-            <div>
-              <div id="detalleObraContacto" style="color:#1e293b; font-weight:700; font-size:1.05rem;"></div>
-              <div id="detalleObraTelefonoContacto" style="color:#64748b; font-size:0.9rem; font-weight:500;"></div>
+            <div class="contact-card-text">
+              <div id="detalleObraContacto" class="contact-name"></div>
+              <div id="detalleObraTelefonoContacto" class="contact-phone"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="background:#fff; border-top:1px solid #f1f5f9; padding: 20px 32px;">
+    <div class="modal-footer">
       <div class="footer-left">
         <a id="btnReporteObra" href="#" class="btn btn-secondary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -214,14 +216,14 @@
 <!-- MODAL NUEVA/EDITAR CASA -->
 <div class="modal-overlay" id="casaModal">
   <div class="modal modal-lg" style="max-height: 95vh; border-radius: 24px;">
-    <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding: 24px 32px; display:flex; align-items:center; gap: 16px;">
-      <div style="width: 44px; height: 44px; background: #fff0f1; border-radius: 12px; display:flex; align-items:center; justify-content:center; color:#DC1E46; flex-shrink:0; border: 1px solid rgba(220, 30, 70, 0.1);">
+    <div class="modal-header">
+      <div class="modal-icon-container">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M9 21V9l3-3 3 3v12"/><path d="M2 21h4V12h3"/><path d="M15 12h3v9h4"/></svg>
       </div>
-      <h2 id="modalCasaTitle" style="color:#0f172a; font-size:1.4rem; font-weight:800; margin:0; letter-spacing:-0.5px;">Nueva Casa Salesiana</h2>
-      <button class="modal-close" style="margin-left:auto;" onclick="closeCasaModal()">✕</button>
+      <h2 id="modalCasaTitle" class="modal-title-main">Nueva Casa Salesiana</h2>
+      <button class="modal-close" onclick="closeCasaModal()">✕</button>
     </div>
-    <div class="modal-body" style="background:#fafafa; padding: 32px 40px;">
+    <div class="modal-body">
       <input type="hidden" id="casa_id"/>
       <div class="form-grid">
         <div class="form-group col-full">
@@ -246,36 +248,37 @@
         </div>
         
         <div class="form-group col-full" style="margin-top: 10px;">
-          <label style="color:#64748b; font-size:0.7rem; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin-bottom:6px; display:block;">Obras Vinculadas a esta Casa</label>
-          <div id="formObrasList" class="cards-grid" style="grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px;"></div>
-          <button type="button" class="btn btn-secondary" onclick="openObraModal()" style="width:100%; border-style: dashed; background: #fff; color: #DC1E46; border-color: #DC1E46; font-weight: 700; height: 50px; border-radius: 12px;">
-            + Vincular Nueva Obra
+          <label class="form-section-label">Obras Vinculadas a esta Casa</label>
+          <div id="formObrasList" class="cards-grid-vertical" style="margin-bottom: 16px;"></div>
+          <button type="button" class="btn-add-obra" onclick="openObraModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Vincular Nueva Obra
           </button>
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="background:#fff; border-top:1px solid #f1f5f9; padding: 20px 40px;">
+    <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeCasaModal()">Cancelar</button>
-      <div style="margin-left:auto; display:flex; gap:12px;">
-        <button class="btn btn-danger" id="btnEliminarCasa" onclick="eliminarCasa()" style="display:none; border-radius:10px;">Eliminar</button>
-        <button class="btn btn-primary" onclick="guardarCasa()" id="btnGuardarCasa" style="border-radius:10px; padding: 10px 24px;">Guardar Casa</button>
+      <div class="footer-actions">
+        <button class="btn btn-danger" id="btnEliminarCasa" onclick="eliminarCasa()" style="display:none;">Eliminar</button>
+        <button class="btn btn-primary" onclick="guardarCasa()" id="btnGuardarCasa">Guardar Casa</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- MODAL NUEVA/EDITAR OBRA (INTERNO AL CREAR CASA) -->
-<div class="modal-overlay" id="obraModal" style="z-index: 1050;">
+<div class="modal-overlay" id="obraModal" style="z-index: 10000;">
   <div class="modal" style="border-radius:24px; max-width: 550px;">
-    <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding: 20px 24px;">
-      <h2 id="modalObraTitle" style="color:#0f172a; font-size:1.25rem; font-weight:800; margin:0; letter-spacing:-0.3px;">Agregar Obra</h2>
+    <div class="modal-header">
+      <h2 id="modalObraTitle" class="modal-title-main">Agregar Obra</h2>
       <button class="modal-close" onclick="closeObraModal()">✕</button>
     </div>
-    <div class="modal-body" style="background:#fafafa; padding: 24px;">
+    <div class="modal-body">
       <input type="hidden" id="obra_temp_id"/>
       <div class="form-grid">
         <div class="form-group col-full">
-          <label>Nombre de la Obra *</label>
+          <label>Nombre *</label>
           <input type="text" id="obra_nombre" class="form-input" placeholder="Ej: Sede Principal"/>
         </div>
         <div class="form-group col-full">

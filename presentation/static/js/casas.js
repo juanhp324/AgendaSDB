@@ -4,6 +4,12 @@ let activeObraId = null;
 let isEditingObraDirectly = false;
 
 // --- Funciones Principales ---
+function toggleBodyScroll() {
+  const anyActive = !!document.querySelector('.modal-overlay.active');
+  document.body.classList.toggle('modal-open', anyActive);
+  document.documentElement.classList.toggle('modal-open', anyActive);
+}
+
 async function cargarCasas(q = '') {
   const grid = document.getElementById('casasGrid');
   if (!grid) return;
@@ -43,15 +49,15 @@ function renderCasas(casas) {
     const genderColor = c.tipo === 'femenino' ? '#ec4899' : '#3b82f6';
 
     return `
-    <div class="casa-card animate-fade-up" style="animation-delay: ${delay}s; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);" onclick="verDetalleCasa('${c._id}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 20px 40px -5px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 25px -5px rgba(0,0,0,0.05)';">
+    <div class="casa-card animate-fade-up" style="animation-delay: ${delay}s; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); overflow: hidden; display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);" onclick="verDetalleCasa('${c._id}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 20px 40px -5px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 25px -5px rgba(0,0,0,0.05)';">
       <div style="height: 6px; background: ${genderColor};"></div>
       <div style="padding: 24px; flex-grow: 1; display:flex; flex-direction:column;">
         <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px;">
-          <div style="width: 75px; height: 75px; border-radius: 16px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; padding: 6px; border: 1px solid #f1f5f9; flex-shrink:0;">
+          <div style="width: 75px; height: 75px; border-radius: 16px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; padding: 6px; border: 1px solid var(--border); flex-shrink:0;">
             <img src="/static/img/logo_sdb.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap: 8px;">
-            <div style="display:flex; align-items:center; gap: 6px; background: #fff0f1; border: 1px solid rgba(220, 30, 70, 0.2); color: #DC1E46; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8rem;">
+            <div style="display:flex; align-items:center; gap: 6px; background: var(--primary-light); border: 1px solid rgba(220, 30, 70, 0.2); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8rem;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               ${c.obras ? c.obras.length : 0} Obras
             </div>
@@ -60,12 +66,12 @@ function renderCasas(casas) {
             </div>
           </div>
         </div>
-        <h3 style="font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.3px;">${c.nombre}</h3>
+        <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.3px;">${c.nombre}</h3>
         <div class="casa-history-scroll">
           ${c.historia || 'Sin historia registrada.'}
         </div>
       </div>
-      <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+      <div style="padding: 16px 24px; background: var(--surface2); border-top: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
         <span style="color: #DC1E46; font-size: 0.85rem; font-weight: 700;">Ver detalles →</span>
       </div>
     </div>`;
@@ -86,12 +92,25 @@ function verDetalleCasa(id) {
   document.getElementById('detalleCasaNombre').textContent = c.nombre;
   document.getElementById('detalleCasaHistoria').textContent = c.historia || 'Sin historia registrada.';
 
-  // Badge Tipo
+  // Badge y Sombras de Logo Dinámicas
   const badge = document.getElementById('detalleCasaTipoBadge');
-  if (badge) {
-    badge.textContent = c.tipo === 'femenino' ? '♀ Femenino' : '♂ Masculino';
-    badge.style.background = c.tipo === 'femenino' ? '#fdf2f8' : '#eff6ff';
-    badge.style.color = c.tipo === 'femenino' ? '#db2777' : '#2563eb';
+  const logoCircle = document.querySelector('.modal-logo-circle');
+  const logoImg = logoCircle ? logoCircle.querySelector('img') : null;
+
+  if (c.tipo === 'femenino') {
+    if (badge) {
+      badge.textContent = '♀ Femenino';
+      badge.className = 'badge-premium female';
+    }
+    document.querySelector('.modal-header-compact').classList.add('female-theme');
+    document.querySelector('.modal-header-compact').classList.remove('male-theme');
+  } else {
+    if (badge) {
+      badge.textContent = '♂ Masculino';
+      badge.className = 'badge-premium male';
+    }
+    document.querySelector('.modal-header-compact').classList.add('male-theme');
+    document.querySelector('.modal-header-compact').classList.remove('female-theme');
   }
 
   // Report button link
@@ -100,12 +119,13 @@ function verDetalleCasa(id) {
 
   // Reset search
   document.getElementById('searchInputObras').value = '';
-  renderObrasDetalleGrid(c.obras || []);
+  renderObrasDetalleGrid(c.obras || [], c.tipo);
 
   document.getElementById('casaDetalleModal').classList.add('active');
+  toggleBodyScroll();
 }
 
-function renderObrasDetalleGrid(obras) {
+function renderObrasDetalleGrid(obras, tipo = 'masculino') {
   const grid = document.getElementById('detalleObrasGrid');
   if (!grid) return;
 
@@ -124,8 +144,10 @@ function renderObrasDetalleGrid(obras) {
     const dispTelf = telfs.length > 0 ? telfs[0] : '—';
     const extraTelfs = telfs.length > 1 ? ` (+${telfs.length - 1} más)` : '';
 
+    const themeClass = tipo === 'femenino' ? 'female-theme' : 'male-theme';
+
     return `
-      <div class="obra-card-premium animate-fade-up" style="animation-delay: ${delay}s;" onclick="verDetalleObra('${o.id}')">
+      <div class="obra-card-premium ${themeClass} animate-fade-up" style="animation-delay: ${delay}s;" onclick="verDetalleObra('${o.id}')">
         <div class="obra-card-accent"></div>
         <div class="obra-card-body">
           <h4 class="obra-card-title">${o.nombre_obra}</h4>
@@ -160,6 +182,7 @@ function buscarObrasDetalle() {
 function closeCasaDetalleModal(e) {
   if (e && e.target.id !== 'casaDetalleModal') return;
   document.getElementById('casaDetalleModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 // --- Modales Obra Detalle ---
@@ -198,17 +221,18 @@ function verDetalleObra(obraId) {
   if (reportBtn) reportBtn.href = `/reporte_obra/${activeCasaId}/${obraId}`;
 
   document.getElementById('obraDetalleModal').classList.add('active');
+  toggleBodyScroll();
 }
 
 function closeObraDetalleModal(e) {
   if (e && e.target.id !== 'obraDetalleModal') return;
   document.getElementById('obraDetalleModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 function abrirEdicionObraDesdeDetalle() {
   if (!activeObraId) return;
   closeObraDetalleModal();
-  closeCasaDetalleModal();
 
   isEditingObraDirectly = true;
 
@@ -239,6 +263,7 @@ function openCasaModal(c = null) {
 
   document.getElementById('btnEliminarCasa').style.display = 'none';
   document.getElementById('casaModal').classList.add('active');
+  toggleBodyScroll();
 }
 
 function openEditCasa(id) {
@@ -253,6 +278,7 @@ function openEditCasa(id) {
 function closeCasaModal(e) {
   if (e && e.target.id !== 'casaModal') return;
   document.getElementById('casaModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 // --- Modales Obra Form (Interno al crear/editar Casa) ---
@@ -318,6 +344,7 @@ function openObraModal(obraId = null, directObraObj = null) {
   }
 
   document.getElementById('obraModal').classList.add('active');
+  toggleBodyScroll();
 }
 
 function addPhoneInput(val = '') {
@@ -346,6 +373,7 @@ function removePhoneInput(btn) {
 function closeObraModal(e) {
   if (e && e.target.id !== 'obraModal') return;
   document.getElementById('obraModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 async function guardarObraInterna() {
@@ -531,43 +559,27 @@ function initCustomSelect() {
   const selectedText = document.getElementById('selectedGenderText');
   const options = document.querySelectorAll('.gender-option');
 
-  if (!trigger || !dropdown) return;
+
+  const closeDropdown = () => {
+    dropdown.classList.remove('open');
+    trigger.classList.remove('active');
+  };
 
   trigger.onclick = (e) => {
     e.stopPropagation();
-    const isOpen = dropdown.style.visibility === 'visible';
-
-    dropdown.style.opacity = isOpen ? '0' : '1';
-    dropdown.style.visibility = isOpen ? 'hidden' : 'visible';
-    dropdown.style.transform = isOpen ? 'translateY(-10px)' : 'translateY(0)';
-    trigger.style.borderColor = isOpen ? '#e2e8f0' : '#DC1E46';
-    trigger.style.boxShadow = isOpen ? '0 2px 4px rgba(0,0,0,0.02)' : '0 4px 15px rgba(220, 30, 70, 0.12)';
+    dropdown.classList.contains('open') ? closeDropdown() : (dropdown.classList.add('open'), trigger.classList.add('active'));
   };
 
   options.forEach(opt => {
     opt.onclick = () => {
-      const val = opt.getAttribute('data-value');
-      const text = opt.innerHTML; // Use innerHTML to keep the icon if present
-
-      hiddenInput.value = val;
-      selectedText.innerHTML = text; // Match the trigger display
-
-      dropdown.style.opacity = '0';
-      dropdown.style.visibility = 'hidden';
-      dropdown.style.transform = 'translateY(-10px)';
-      trigger.style.borderColor = '#e2e8f0';
-
+      hiddenInput.value = opt.getAttribute('data-value');
+      selectedText.textContent = opt.textContent.trim();
+      closeDropdown();
       cargarCasas();
     };
   });
 
-  document.addEventListener('click', () => {
-    if (!dropdown) return;
-    dropdown.style.opacity = '0';
-    dropdown.style.visibility = 'hidden';
-    dropdown.style.transform = 'translateY(-10px)';
-    trigger.style.borderColor = '#e2e8f0';
-  });
+  document.addEventListener('click', closeDropdown);
 }
 
 function setGender(val) {
@@ -588,3 +600,12 @@ function setGender(val) {
   }
 }
 
+// Move modals to body to escape .main-content stacking context
+document.addEventListener('DOMContentLoaded', () => {
+    ['casaModal', 'obraModal', 'casaDetalleModal', 'obraDetalleModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            document.body.appendChild(modal);
+        }
+    });
+});

@@ -3,22 +3,28 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Agenda Salesiana{% endblock %}</title>
   <meta name="description" content="Directorio oficial de Casas Salesianas"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
   {% block head %}{% endblock %}
+  <!-- Theme apply: run before paint to avoid flash -->
+  <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 
+
 <!-- NAVBAR -->
 <nav class="navbar">
-  <div class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#1a73e8"/>
-      <path d="M10 22V14l6-5 6 5v8h-4v-5h-4v5z" fill="white"/>
-    </svg>
+<div class="nav-brand">
+    <div class="nav-brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
     <span class="brand-name">Agenda Salesiana</span>
   </div>
 
@@ -26,6 +32,12 @@
     <a href="{{ url_for('RInicio.inicio') }}" class="nav-link {% if active_page == 'inicio' %}active{% endif %}">Inicio</a>
     <a href="{{ url_for('RCasas.casas') }}"  class="nav-link {% if active_page == 'casas'  %}active{% endif %}">Casas</a>
   </div>
+
+  <!-- Theme Toggle -->
+  <button id="themeToggle" class="theme-btn" onclick="toggleTheme()" title="Cambiar tema">
+    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 
   <div class="nav-user">
     <button class="user-btn" id="userMenuBtn" onclick="toggleUserMenu()">
@@ -72,7 +84,7 @@
 </nav>
 
 <!-- CONTENT -->
-<main class="main-content">
+<main class="main-content page-enter">
   {% block content %}{% endblock %}
 </main>
 
@@ -81,7 +93,7 @@
 
 <!-- GLOBAL STATUS MODAL (Saving/Deleting/Deactivating) -->
 <div class="modal-overlay" id="statusModal" style="z-index: 10001; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);">
-  <div class="modal" style="max-width: 400px; border-radius: 30px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+  <div class="modal glass-card" style="max-width: 400px; border-radius: 30px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
     <div class="status-animation-container" id="statusContent">
       <!-- Content injected by JS -->
     </div>
@@ -90,19 +102,19 @@
 
 <!-- GLOBAL CONFIRM MODAL -->
 <div class="modal-overlay" id="confirmModal" style="z-index: 10000; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);">
-  <div class="modal" style="max-width: 440px; border-radius: 28px; border: none; position: relative; padding: 40px 32px;">
+  <div class="modal glass-card" style="max-width: 440px; border-radius: 28px; border: none; position: relative; padding: 40px 32px;">
     <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: var(--surface2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;" onclick="closeConfirmModal()">✕</button>
     
-    <div class="modal-header" style="border: none; padding: 0; margin-bottom: 12px; display: block; text-align: center;">
-      <h2 id="confirmTitle" style="font-size: 1.6rem; font-weight: 800; color: var(--secondary); margin: 0; letter-spacing: -0.5px;">Confirmar Acción</h2>
+    <div class="modal-header" style="border: none; padding: 0; margin-bottom: 12px; display: block; text-align: center; background: transparent;">
+      <h2 id="confirmTitle" style="font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0; letter-spacing: -0.5px;">Confirmar Acción</h2>
     </div>
     
     <div class="modal-body" style="padding: 0; background: transparent; text-align: center; margin-bottom: 32px;">
       <p id="confirmMessage" style="color: var(--text-2); font-size: 1.1rem; line-height: 1.6; font-weight: 500; margin: 0;"></p>
     </div>
     
-    <div class="modal-footer" style="border: none; padding: 0; justify-content: center; gap: 24px;">
-      <button class="btn" id="cancelConfirmBtn" onclick="closeConfirmModal()">Cancelar</button>
+    <div class="modal-footer" style="border: none; padding: 0; justify-content: center; gap: 24px; background: transparent;">
+      <button class="btn btn-secondary" id="cancelConfirmBtn" onclick="closeConfirmModal()">Cancelar</button>
       <button class="btn btn-primary" id="confirmBtn">Confirmar</button>
     </div>
   </div>
@@ -110,7 +122,7 @@
 
 <!-- MODAL DETALLE PERFIL (Ver Mi Perfil) -->
 <div class="modal-overlay" id="perfilDetalleModal" onclick="closePerfilDetalleModal(event)">
-  <div class="modal profile-detail-premium">
+  <div class="modal profile-detail-premium glass-card">
     <div class="profile-header-premium">
       <div class="profile-avatar-large" id="detallePerfilAvatar">S</div>
       <div class="profile-header-info">
@@ -144,7 +156,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closePerfilDetalleModal()">Cerrar</button>
+      <button class="btn btn-ghost" onclick="closePerfilDetalleModal()">Cerrar</button>
       <button class="btn btn-primary" onclick="abrirEdicionPerfilDesdeDetalle()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -158,14 +170,14 @@
 <!-- MODAL EDITAR PERFIL -->
 <div class="modal-overlay" id="perfilModal" onclick="closePerfilModal(event)">
   <div class="modal" style="border-radius:24px; max-width: 500px;">
-    <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding: 24px 32px; display:flex; align-items:center; gap: 16px;">
-      <div style="width: 44px; height: 44px; background: #fff0f1; border-radius: 12px; display:flex; align-items:center; justify-content:center; color:#DC1E46; flex-shrink:0; border: 1px solid rgba(220, 30, 70, 0.1);">
+    <div class="modal-header">
+      <div class="modal-icon-container">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <h2 style="color:#0f172a; font-size:1.4rem; font-weight:800; margin:0; letter-spacing:-0.5px;">Editar Perfil</h2>
-      <button class="modal-close" style="margin-left:auto;" onclick="closePerfilModal()">✕</button>
+      <h2 class="modal-title-main">Editar Perfil</h2>
+      <button class="modal-close" onclick="closePerfilModal()">✕</button>
     </div>
-    <div class="modal-body" style="background:#fafafa; padding: 32px;">
+    <div class="modal-body">
       <div class="form-group">
         <label>Nombre completo</label>
         <input type="text" id="perfil_nombre" class="form-input" placeholder="Nombre"/>
@@ -187,9 +199,10 @@
         <input type="password" id="perfil_password" class="form-input" placeholder="••••••••"/>
       </div>
     </div>
-    <div class="modal-footer" style="background:#fff; border-top:1px solid #f1f5f9; padding: 20px 32px;">
+    <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closePerfilModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarPerfil()" style="border-radius:10px; padding: 10px 24px; margin-left:auto;">Guardar Cambios</button>
+      <button class="btn btn-primary" onclick="guardarPerfil()">Guardar Cambios</button>
+    </div>
     </div>
   </div>
 </div>
