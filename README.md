@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="presentation/static/images/logo_sdb.png" alt="Logo Salesianos" width="120" />
+  <img src="presentation/static/img/logo_sdb.png" alt="Logo Salesianos" width="120" />
   <h1>Agenda Salesiana SDB 🏛️</h1>
   <p><em>Sistema de Gestión Institucional Premium para la Inspectoría de las Antillas (República Dominicana)</em></p>
 
