@@ -9,8 +9,6 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "AgendaSDB")
 
 if not MONGODB_URI:
-    # Use a generic localhost URI if no environment variable is provided
-    print("[WARNING] MONGODB_URI no definida en .env. Usando localhost por defecto.")
     MONGODB_URI = "mongodb://localhost:27017/?directConnection=true"
 
 

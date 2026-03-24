@@ -9,12 +9,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  <!-- UI Libraries: AOS, Vanilla-Tilt, Particles, SweetAlert2, Toastify, Animate.css -->
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   {% block head %}{% endblock %}
   <!-- Theme apply: run before paint to avoid flash -->
   <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 
+<!-- GLOBAL PARTICLES BACKGROUND -->
+<div id="particles-js-global"></div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -89,36 +96,9 @@
 </main>
 
 <!-- GLOBAL TOAST CONTAINER -->
-<div id="toastContainer"></div>
 
-<!-- GLOBAL STATUS MODAL (Saving/Deleting/Deactivating) -->
-<div class="modal-overlay" id="statusModal" style="z-index: 10001; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);">
-  <div class="modal glass-card" style="max-width: 400px; border-radius: 30px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-    <div class="status-animation-container" id="statusContent">
-      <!-- Content injected by JS -->
-    </div>
-  </div>
-</div>
+<!-- GLOBAL MODALS & NOTIFICATIONS (SweetAlert2 & Toastify-js automatically handle these) -->
 
-<!-- GLOBAL CONFIRM MODAL -->
-<div class="modal-overlay" id="confirmModal" style="z-index: 10000; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);">
-  <div class="modal glass-card" style="max-width: 440px; border-radius: 28px; border: none; position: relative; padding: 40px 32px;">
-    <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: var(--surface2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;" onclick="closeConfirmModal()">✕</button>
-    
-    <div class="modal-header" style="border: none; padding: 0; margin-bottom: 12px; display: block; text-align: center; background: transparent;">
-      <h2 id="confirmTitle" style="font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0; letter-spacing: -0.5px;">Confirmar Acción</h2>
-    </div>
-    
-    <div class="modal-body" style="padding: 0; background: transparent; text-align: center; margin-bottom: 32px;">
-      <p id="confirmMessage" style="color: var(--text-2); font-size: 1.1rem; line-height: 1.6; font-weight: 500; margin: 0;"></p>
-    </div>
-    
-    <div class="modal-footer" style="border: none; padding: 0; justify-content: center; gap: 24px; background: transparent;">
-      <button class="btn btn-secondary" id="cancelConfirmBtn" onclick="closeConfirmModal()">Cancelar</button>
-      <button class="btn btn-primary" id="confirmBtn">Confirmar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL DETALLE PERFIL (Ver Mi Perfil) -->
 <div class="modal-overlay" id="perfilDetalleModal" onclick="closePerfilDetalleModal(event)">
@@ -212,6 +192,76 @@
   window.currentUserId = "{{ session.get('user_id', '') }}";
   
   // Handle flash messages via toasts safely after global.js loads
+</script>
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+  function initGlobalParticles() {
+    const pjs = document.getElementById('particles-js-global');
+    if(pjs) pjs.innerHTML = '';
+    
+    const path = window.location.pathname;
+    const isInicio = path === '/' || path.includes('/inicio');
+    
+    // Only init if we are on the Inicio page
+    if (!pjs || !isInicio) {
+        if(pjs && !isInicio) pjs.style.display = 'none'; // hide if not inicio
+        return;
+    } else {
+        pjs.style.display = 'block';
+    }
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const color = isDark ? '#ffffff' : '#DC1E46'; // Red in light mode
+    const linecolor = isDark ? '#334155' : '#94a3b8'; // Matching design system
+    
+    particlesJS('particles-js-global', {
+      "particles": {
+        "number": { "value": 15, "density": { "enable": true, "value_area": 1200 } },
+        "color": { "value": color },
+        "shape": { "type": "circle" },
+        "opacity": { "value": isDark ? 0.35 : 0.7, "random": false }, // Higher opacity
+        "size": { "value": 5.5, "random": true },
+        "line_linked": { "enable": true, "distance": 150, "color": linecolor, "opacity": isDark ? 0.25 : 0.45, "width": 1 },
+        "move": { "enable": true, "speed": 0.6, "direction": "none", "random": true, "straight": false, "out_mode": "out", "bounce": false }
+      },
+      "interactivity": {
+        "detect_on": "window",
+        "events": { 
+          "onhover": { "enable": true, "mode": "grab" }, 
+          "onclick": { "enable": false }, 
+          "resize": true 
+        },
+        "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 0.7 } } }
+      },
+      "retina_detect": true
+    });
+  }
+  
+  // Need slight delay to ensure scripts are completely loaded and DOM is ready
+  setTimeout(initGlobalParticles, 150);
+
+  // Listen for theme changes to re-init particles globally as well
+  const observerGlobal = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.attributeName === 'data-theme') {
+        initGlobalParticles();
+      }
+    });
+  });
+  observerGlobal.observe(document.documentElement, { attributes: true });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+<script>
+  // Initialize AOS
+  AOS.init({
+    duration: 400,
+    easing: 'ease-out-quad',
+    once: true,
+    offset: 20
+  });
 </script>
 {% block scripts %}{% endblock %}
 </body>

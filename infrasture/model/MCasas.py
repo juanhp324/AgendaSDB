@@ -11,13 +11,23 @@ def getAllCasas(query=None, tipo=None):
     col = _get_col()
     filtro = {}
     if query:
-        pattern = re.compile(query, re.IGNORECASE)
+        pattern = re.compile(re.escape(query), re.IGNORECASE)
         filtro["$or"] = [{"nombre": pattern}, {"obras.ciudad": pattern}, {"obras.nombre_obra": pattern}]
     
     if tipo and tipo != 'todos':
         filtro["tipo"] = re.compile(f"^{tipo}$", re.IGNORECASE)
         
-    cursor = col.find(filtro).sort("_id", -1)
+    # Optimización: Traer los campos necesarios. 
+    # Incluimos 'obras' completo porque el frontend lo usa para los modales de detalle sin re-petición.
+    proyeccion = {
+        "nombre": 1, 
+        "tipo": 1, 
+        "obras": 1, 
+        "historia": 1,
+        "_id": 1
+    }
+    
+    cursor = col.find(filtro, proyeccion).sort("_id", -1)
     result = list(cursor)
     cursor.close()
     return result

@@ -15,68 +15,70 @@ window.fetch = function(url, options = {}) {
     return originalFetch(url, options);
 };
 
-// --- Global Notification (Toast) System ---
+// --- Global Notification (Toast) System (Powered by Toastify-js) ---
 function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `premium-toast toast-${type}`;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     
-    const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : '⚠');
-    
-    toast.innerHTML = `
-        <div class="toast-icon" style="font-size: 1.2rem; font-weight: 900;">${icon}</div>
-        <div class="toast-content">
-            <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-            <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-    `;
+    // Icon mapping
+    const iconMap = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
 
-    container.appendChild(toast);
+    // Modern colors matching our design system
+    const colorMap = {
+        success: '#10b981', // Emerald
+        error: '#ef4444',   // Rose/Red
+        warning: '#f59e0b', // Amber
+        info: '#3b82f6'     // Blue
+    };
 
-    // Auto remove after 5s
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(20px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
+    Toastify({
+        text: `${iconMap[type] || '•'}  ${message}`,
+        duration: 4000,
+        gravity: "top", // Moved to top
+        position: "right",
+        close: true, // Allow manual closing
+        stopOnFocus: true,
+        style: {
+            background: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(255, 255, 255, 0.95)",
+            color: isDark ? "#f1f5f9" : "#0f172a",
+            backdropFilter: "blur(12px)",
+            borderLeft: `6px solid ${colorMap[type] || colorMap.success}`,
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)",
+            borderRadius: "16px",
+            padding: "16px 24px",
+            fontSize: "1rem",
+            fontWeight: "700",
+            fontFamily: "'Plus Jakarta Sans', sans-serif"
+        }
+    }).showToast();
 }
 
 // --- Global Status Modal (Animated) ---
-function showStatusModal(type, customText = '') {
+// Note: We could use Swal for this but keeping it for now as a lightweight loader
+function showStatusModal(type, title, message) {
     const modal = document.getElementById('statusModal');
     const content = document.getElementById('statusContent');
     if (!modal || !content) return;
 
-    let html = '';
-    let title = '';
-
+    let iconHtml = '';
     if (type === 'saving') {
-        title = customText || 'Guardando cambios...';
-        html = `
-            <div class="loader-ring"></div>
-            <h2 style="margin: 0; color: var(--secondary); font-weight: 800; font-size: 1.5rem;">${title}</h2>
-            <p style="color: var(--text-3); margin: 0;">Un momento, por favor.</p>
-        `;
+        iconHtml = '<div class="loader-ring"></div>';
     } else if (type === 'deleting') {
-        title = customText || 'Eliminando registro...';
-        html = `
-            <div class="loader-ring" style="border-top-color: var(--danger);"></div>
-            <h2 style="margin: 0; color: var(--danger); font-weight: 800; font-size: 1.5rem;">${title}</h2>
-            <p style="color: var(--text-3); margin: 0;">Eliminando permanentemente.</p>
-        `;
-    } else if (type === 'deactivating') {
-        title = customText || 'Desactivando usuario...';
-        html = `
-            <div class="pulse-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/></svg></div>
-            <h2 style="margin: 0; color: var(--accent); font-weight: 800; font-size: 1.5rem;">${title}</h2>
-            <p style="color: var(--text-3); margin: 0;">Suspensión temporal en progreso.</p>
-        `;
+        iconHtml = '<div class="pulse-icon" style="color:var(--danger); background:var(--danger-light);">✕</div>';
+    } else if (type === 'success') {
+        iconHtml = '<div class="pulse-icon" style="color:var(--success); background:var(--success-light);">✓</div>';
     }
 
-    content.innerHTML = html;
+    content.innerHTML = `
+        ${iconHtml}
+        <h2 style="margin:0; font-size:1.5rem; font-weight:800; color:var(--text);">${title}</h2>
+        ${message ? `<p style="margin:0; color:var(--text-2); font-weight:500;">${message}</p>` : ''}
+    `;
+
     modal.classList.add('active');
 }
 
@@ -85,31 +87,43 @@ function closeStatusModal() {
     if (modal) modal.classList.remove('active');
 }
 
-// --- Global Confirm Modal ---
-let confirmCallback = null;
-
+// --- Global Confirm Modal (Powered by SweetAlert2) ---
 function showConfirmModal(title, message, onConfirm, btnType = 'primary') {
-    const modal = document.getElementById('confirmModal');
-    if (!modal) return;
-
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    confirmCallback = onConfirm;
-
-    const btn = document.getElementById('confirmBtn');
-    // Sanitize classes before adding new ones
-    btn.className = `btn btn-${btnType === 'danger' ? 'danger' : 'primary'}`;
-    btn.onclick = () => {
-        closeConfirmModal();
-        if (confirmCallback) confirmCallback();
-    };
-
-    modal.classList.add('active');
-}
-
-function closeConfirmModal() {
-    const modal = document.getElementById('confirmModal');
-    if (modal) modal.classList.remove('active');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    
+    Swal.fire({
+        title: title,
+        text: message,
+        icon: btnType === 'danger' ? 'warning' : 'question',
+        target: 'body',
+        showCancelButton: true,
+        confirmButtonColor: btnType === 'danger' ? '#ef4444' : '#DC1E46',
+        cancelButtonColor: isDark ? '#334155' : '#94a3b8',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar',
+        background: isDark ? '#1e293b' : '#ffffff',
+        color: isDark ? '#f1f5f9' : '#0f172a',
+        borderRadius: '24px',
+        padding: '2.5rem',
+        reverseButtons: true, // Accessibility/Flow best practice
+        showClass: {
+            popup: 'animate__animated animate__fadeInUp animate__faster'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutDown animate__faster'
+        },
+        customClass: {
+            popup: 'premium-swal-popup',
+            title: 'premium-swal-title',
+            htmlContainer: 'premium-swal-content',
+            confirmButton: 'premium-swal-confirm',
+            cancelButton: 'premium-swal-cancel'
+        }
+    }).then((result) => {
+        if (result.isConfirmed && onConfirm) {
+            onConfirm();
+        }
+    });
 }
 
 // --- Dropbox / User Menu ---

@@ -1,21 +1,31 @@
 /* ── PAGE HEADER ── */
-html.modal-open, body.modal-open { overflow: hidden !important; height: 100vh; width: 100vw; }
-body.modal-open::-webkit-scrollbar { display: none; }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
-.header-actions { display: flex; gap: 12px; align-items: center; }
-.page-title { font-size: 1.8rem; font-weight: 900; color: var(--secondary); letter-spacing: -0.5px; }
-.page-subtitle { color: var(--text-2); font-size: 0.95rem; margin-top: 2px; font-weight: 500; }
+.page-header { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  margin-bottom: 48px; /* Increased margin from content */
+  padding-bottom: 24px; 
+  border-bottom: 1px solid var(--border); 
+}
+.header-actions { 
+  display: flex; 
+  gap: 16px; /* Increased gap between buttons */
+  align-items: center; 
+  flex-wrap: wrap;
+}
+.page-title { font-size: 2.2rem; font-weight: 900; color: var(--secondary); letter-spacing: -1px; }
+.page-subtitle { color: var(--text-2); font-size: 1rem; margin-top: 4px; font-weight: 500; }
 
 /* ── SEARCH ── */
 .search-controls {
-  display: flex; gap: 20px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
+  display: flex; gap: 24px; align-items: center; margin-bottom: 48px; flex-wrap: wrap; /* Increased gap and margin */
 }
 
 .search-bar {
   display: flex; align-items: center; gap: 16px;
-  background: var(--surface); border: 2px solid var(--border);
-  border-radius: 40px; padding: 10px 24px;
-  margin-bottom: 30px; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 40px; padding: 12px 28px; /* Increased padding */
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow);
 }
 .search-bar:focus-within { 
@@ -37,16 +47,33 @@ body.modal-open::-webkit-scrollbar { display: none; }
 }
 
 .casa-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+  background: var(--surface); border: 1px solid var(--border); 
+  border-radius: 8px 8px 24px 24px; /* Asymmetric for modern feel */
   overflow: hidden; cursor: pointer;
-  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow);
+  transition: box-shadow .3s ease, border-color .3s ease;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  
+  /* Flexbox for sticky footer */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .casa-card:hover { 
-  transform: translateY(-8px); 
-  box-shadow: var(--shadow-lg); 
+  box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1); 
   border-color: var(--primary);
 }
+.casa-card:active {
+  transform: scale(0.97) !important;
+  transition: transform 0.1s ease;
+  background: var(--surface2);
+}
+.casa-card {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .card-logo {
   height: 180px; background: #fff;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -239,12 +266,18 @@ body.modal-open::-webkit-scrollbar { display: none; }
   position: relative;
   display: flex;
   flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .obra-card-premium:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 15px 35px -5px rgba(0,0,0,0.12);
-  border-color: var(--primary-light);
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+.obra-card-premium:active {
+  transform: scale(0.97) translateY(-2px) !important;
+  background: var(--surface2);
 }
 
 .obra-card-accent {

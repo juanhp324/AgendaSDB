@@ -2,6 +2,7 @@ let tempObras = [];
 let activeCasaId = null;
 let activeObraId = null;
 let isEditingObraDirectly = false;
+let searchTimeout = null;
 
 // --- Funciones Principales ---
 function toggleBodyScroll() {
@@ -32,6 +33,21 @@ async function cargarCasas(q = '') {
     }
     casasData = data.casas;
     renderCasas(casasData);
+    
+    // Refresh AOS and Init Tilt after rendering
+    setTimeout(() => {
+      if (typeof AOS !== 'undefined') AOS.refresh();
+      if (typeof VanillaTilt !== 'undefined') {
+        VanillaTilt.init(document.querySelectorAll(".casa-card"), {
+          max: 5, // Reduced from 10
+          speed: 800, // Faster return
+          glare: true,
+          "max-glare": 0.1, // Reduced glare
+          scale: 1.01, // Reduced scale
+          gyroscope: false // Disable gyro to avoid weirdness on mobile
+        });
+      }
+    }, 50);
   } catch (err) {
     grid.style.opacity = '1';
     showToast('Error de conexión', 'error');
@@ -49,7 +65,11 @@ function renderCasas(casas) {
     const genderColor = c.tipo === 'femenino' ? '#ec4899' : '#3b82f6';
 
     return `
-    <div class="casa-card animate-fade-up" style="animation-delay: ${delay}s; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); overflow: hidden; display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);" onclick="verDetalleCasa('${c._id}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 20px 40px -5px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 10px 25px -5px rgba(0,0,0,0.05)';">
+    <div class="casa-card" 
+         data-aos="fade" 
+         data-aos-delay="${index * 30}"
+         data-tilt
+         onclick="verDetalleCasa('${c._id}')">
       <div style="height: 6px; background: ${genderColor};"></div>
       <div style="padding: 24px; flex-grow: 1; display:flex; flex-direction:column;">
         <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px;">
@@ -79,8 +99,14 @@ function renderCasas(casas) {
 }
 
 function buscarCasas() {
-  const q = document.getElementById('searchInput').value.trim();
-  if (q.length > 1 || q.length === 0) cargarCasas(q);
+  const input = document.getElementById('searchInput');
+  if (!input) return;
+  const q = input.value.trim();
+
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    if (q.length > 1 || q.length === 0) cargarCasas(q);
+  }, 300); // 300ms debounce
 }
 
 // --- Modales Casa Detalle ---
@@ -117,12 +143,18 @@ function verDetalleCasa(id) {
   const reportBtn = document.getElementById('btnReporteCasa');
   if (reportBtn) reportBtn.href = `/reporte_casa/${id}`;
 
+  const reportBtnWord = document.getElementById('btnReporteCasaWord');
+  if (reportBtnWord) reportBtnWord.href = `/reporte_casa_word/${id}`;
+
   // Reset search
   document.getElementById('searchInputObras').value = '';
   renderObrasDetalleGrid(c.obras || [], c.tipo);
 
-  document.getElementById('casaDetalleModal').classList.add('active');
-  toggleBodyScroll();
+  // Micro-delay para que el usuario perciba el estado ":active" (tactile feedback)
+  setTimeout(() => {
+    document.getElementById('casaDetalleModal').classList.add('active');
+    toggleBodyScroll();
+  }, 100);
 }
 
 function renderObrasDetalleGrid(obras, tipo = 'masculino') {
@@ -212,7 +244,9 @@ function verDetalleObra(obraId) {
     webLink.href = '#';
   }
 
-  document.getElementById('detalleObraCorreo').textContent = o.correo || '—';
+  const correos = Array.isArray(o.correo) ? o.correo : (o.correo ? [o.correo] : []);
+  document.getElementById('detalleObraCorreos').innerHTML = correos.map(c => `<span>${c}</span>`).join('') || '—';
+
   document.getElementById('detalleObraContacto').textContent = o.contacto || '—';
   document.getElementById('detalleObraTelefonoContacto').textContent = o.telefono_contacto || '—';
 
@@ -220,8 +254,13 @@ function verDetalleObra(obraId) {
   const reportBtn = document.getElementById('btnReporteObra');
   if (reportBtn) reportBtn.href = `/reporte_obra/${activeCasaId}/${obraId}`;
 
-  document.getElementById('obraDetalleModal').classList.add('active');
-  toggleBodyScroll();
+  const reportBtnWord = document.getElementById('btnReporteObraWord');
+  if (reportBtnWord) reportBtnWord.href = `/reporte_obra_word/${activeCasaId}/${obraId}`;
+
+  setTimeout(() => {
+    document.getElementById('obraDetalleModal').classList.add('active');
+    toggleBodyScroll();
+  }, 100);
 }
 
 function closeObraDetalleModal(e) {
@@ -329,9 +368,18 @@ function openObraModal(obraId = null, directObraObj = null) {
   document.getElementById('obra_ciudad').value = o ? (o.ciudad || '') : '';
   document.getElementById('obra_direccion').value = o ? (o.direccion || '') : '';
   document.getElementById('obra_web').value = o ? (o.web || '') : '';
-  document.getElementById('obra_correo').value = o ? (o.correo || '') : '';
   document.getElementById('obra_contacto').value = o ? (o.contacto || '') : '';
   document.getElementById('obra_telefono_contacto').value = o ? (o.telefono_contacto || '') : '';
+
+  // Handle multiple emails
+  const emailContainer = document.getElementById('obraEmailsContainer');
+  emailContainer.innerHTML = '';
+  const correos = o && Array.isArray(o.correo) ? o.correo : (o && o.correo ? [o.correo] : []);
+  if (correos.length === 0) {
+    addEmailInput();
+  } else {
+    correos.forEach(c => addEmailInput(c));
+  }
 
   // Handle multiple phones
   const phoneContainer = document.getElementById('obraPhonesContainer');
@@ -345,6 +393,29 @@ function openObraModal(obraId = null, directObraObj = null) {
 
   document.getElementById('obraModal').classList.add('active');
   toggleBodyScroll();
+}
+
+function addEmailInput(val = '') {
+  const container = document.getElementById('obraEmailsContainer');
+  const div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.innerHTML = `
+    <input type="email" class="form-input obra-email-input" value="${val}" placeholder="contacto@ejemplo.com" style="flex:1;"/>
+    <button type="button" class="btn btn-danger" style="width: 44px; height: 44px; flex-shrink:0; border-radius: 12px; display:flex; align-items:center; justify-content:center; padding:0;" onclick="removeEmailInput(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  `;
+  container.appendChild(div);
+}
+
+function removeEmailInput(btn) {
+  const container = document.getElementById('obraEmailsContainer');
+  if (container.children.length > 1) {
+    btn.parentElement.remove();
+  } else {
+    btn.parentElement.querySelector('input').value = '';
+  }
 }
 
 function addPhoneInput(val = '') {
@@ -383,6 +454,9 @@ async function guardarObraInterna() {
   const telfInputs = document.querySelectorAll('.obra-phone-input');
   const telfs = Array.from(telfInputs).map(i => i.value.trim()).filter(v => v !== '');
 
+  const emailInputs = document.querySelectorAll('.obra-email-input');
+  const emails = Array.from(emailInputs).map(i => i.value.trim()).filter(v => v !== '');
+
   const data = {
     nombre_obra: n_obra,
     telefono: telfs,
@@ -390,7 +464,7 @@ async function guardarObraInterna() {
     ciudad: document.getElementById('obra_ciudad').value.trim(),
     direccion: document.getElementById('obra_direccion').value.trim(),
     web: document.getElementById('obra_web').value.trim(),
-    correo: document.getElementById('obra_correo').value.trim(),
+    correo: emails,
     contacto: document.getElementById('obra_contacto').value.trim(),
     telefono_contacto: document.getElementById('obra_telefono_contacto').value.trim(),
   };
