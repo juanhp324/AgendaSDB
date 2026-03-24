@@ -1,5 +1,5 @@
 from bson import ObjectId
-from infrasture.db import get_database
+from infrastructure.db import get_database
 from datetime import datetime
 import re
 

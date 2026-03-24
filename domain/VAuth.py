@@ -1,4 +1,4 @@
-import infrasture.model.MAuth as MAuth
+import infrastructure.model.MAuth as MAuth
 from flask import url_for, redirect, session, request, flash, jsonify, render_template
 from werkzeug.security import check_password_hash
 
@@ -12,7 +12,7 @@ PROTECTED_ENDPOINTS = [
     'RAuth.update_perfil', 'RAuth.get_perfil',
 ]
 
-from infrasture.safety import ServiceUnavailableError
+from infrastructure.core.safety import ServiceUnavailableError
 
 class AppGateway:
     """

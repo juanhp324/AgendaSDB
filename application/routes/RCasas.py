@@ -1,5 +1,5 @@
 from flask import render_template, request, Blueprint, jsonify, session, current_app
-import infrasture.model.MCasas as MCasas
+import infrastructure.model.MCasas as MCasas
 import domain.VCasas as VCasas
 from docx import Document
 from docx.shared import Inches, Pt

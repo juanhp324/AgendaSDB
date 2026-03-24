@@ -31,7 +31,7 @@ app.register_blueprint(RUsuarios_bp)
 AppGateway(app)
 
 # --- SEGURIDAD GLOBAL (Rate Limit & CSRF) ---
-from infrasture.safety import CSRFProtector, RateLimiter
+from infrastructure.core.safety import CSRFProtector, RateLimiter
 from flask import abort
 
 login_limiter = RateLimiter(requests=5, window=60)

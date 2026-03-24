@@ -1,4 +1,4 @@
-from infrasture.db import get_database
+from infrastructure.db import get_database
 from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 

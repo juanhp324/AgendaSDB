@@ -1,5 +1,5 @@
 from flask import render_template, request, Blueprint, jsonify, redirect, url_for, session
-import infrasture.model.MAuth as MAuth
+import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from werkzeug.security import generate_password_hash
 

@@ -26,7 +26,7 @@ CONNECTION_CONFIG = {
     "waitQueueTimeoutMS": 5000
 }
 
-from infrasture.safety import CircuitBreaker, ServiceUnavailableError
+from infrastructure.core.safety import CircuitBreaker, ServiceUnavailableError
 
 _client = None
 _db = None
