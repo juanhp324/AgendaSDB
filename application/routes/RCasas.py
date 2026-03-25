@@ -263,9 +263,9 @@ def reporte_casas():
                 if not obras:
                     pdf.set_fill_color(255, 255, 255)
                     pdf.cell(w[0], 8, " (Sin obras registradas)", border=1, fill=True)
-                    pdf.cell(w[1], 8, "—", border=1, fill=True, align='C')
-                    pdf.cell(w[2], 8, "—", border=1, fill=True, align='C')
-                    pdf.cell(w[3], 8, "—", border=1, fill=True, align='C')
+                    pdf.cell(w[1], 8, "-", border=1, fill=True, align='C')
+                    pdf.cell(w[2], 8, "-", border=1, fill=True, align='C')
+                    pdf.cell(w[3], 8, "-", border=1, fill=True, align='C')
                     pdf.ln()
                 else:
                     fill = False
@@ -273,9 +273,9 @@ def reporte_casas():
                         # Zebra striping
                         pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
                         
-                        nombre_obra = (o.get('nombre_obra') or '—')[:40]
+                        nombre_obra = (o.get('nombre_obra') or '-')[:40]
                         ap = o.get('apartado_postal')
-                        ciudad_text = o.get('ciudad') or '—'
+                        ciudad_text = o.get('ciudad') or '-'
                         if ap:
                             ciudad_text = f"{ciudad_text} (AP: {ap})"
                         ciudad = str(ciudad_text)[:20]
@@ -284,7 +284,7 @@ def reporte_casas():
                         tel = ", ".join([str(t) for t in telfs])[:20] if isinstance(telfs, list) else str(telfs)[:20]
                         
                         correos = o.get('correo', [])
-                        cont_val = (o.get('contacto') or '—')
+                        cont_val = (o.get('contacto') or '-')
                         if correos:
                             email_str = ", ".join(correos) if isinstance(correos, list) else str(correos)
                             cont = f"{cont_val} ({email_str})"[:30]
@@ -366,17 +366,17 @@ def reporte_casa(casa_id):
             
             for o in obras:
                 detalles_obra = [
-                    ("Ciudad:", o.get('ciudad', '—')),
-                    ("Teléfono:", o.get('telefono', '—')),
-                    ("Dirección:", o.get('direccion', '—')),
-                    ("Sitio Web:", o.get('web', '—')),
-                    ("Correo(s):", ", ".join(o.get('correo', [])) if isinstance(o.get('correo', []), list) else o.get('correo', '—')),
-                    ("Persona Contacto:", o.get('contacto', '—')),
-                    ("Tlf. Contacto:", o.get('telefono_contacto', '—'))
+                    ("Ciudad:", o.get('ciudad', '-')),
+                    ("Teléfono:", o.get('telefono', '-')),
+                    ("Dirección:", o.get('direccion', '-')),
+                    ("Sitio Web:", o.get('web', '-')),
+                    ("Correo(s):", ", ".join(o.get('correo', [])) if isinstance(o.get('correo', []), list) else o.get('correo', '-')),
+                    ("Persona Contacto:", o.get('contacto', '-')),
+                    ("Tlf. Contacto:", o.get('telefono_contacto', '-'))
                 ]
                 
                 # Calcular altura necesaria: Cabecera(10) + Espacio(2) + Detalles(8 cada uno) + Margen(5)
-                valid_detalles = [v for l, v in detalles_obra if v and str(v).strip() != '—']
+                valid_detalles = [v for l, v in detalles_obra if v and str(v).strip() != '-']
                 needed_h = 10 + 2 + (len(valid_detalles) * 8) + 5
                 
                 if pdf.get_y() + needed_h > 275: # Umbral para página A4
@@ -388,7 +388,7 @@ def reporte_casa(casa_id):
                 pdf.ln(2)
                 
                 for label, value in detalles_obra:
-                    if value and str(value).strip() != '—':
+                    if value and str(value).strip() != '-':
                         pdf.set_font("helvetica", "B", 10)
                         pdf.cell(40, 8, label)
                         pdf.set_font("helvetica", "", 10)
@@ -445,7 +445,7 @@ def reporte_obra(casa_id, obra_id):
         pdf.cell(0, 10, obra_data.get('nombre_obra', 'Detalle de la Obra'), ln=True, align='C')
         
         # Subtitle Casa Perteneciente
-        casa_nombre = (casa.get('nombre') or '—') if casa else "—"
+        casa_nombre = (casa.get('nombre') or '-') if casa else "-"
         pdf.cell(0, 8, f"Perteneciente a: {casa_nombre}", ln=True, align='C')
         pdf.ln(10)
         
@@ -462,19 +462,19 @@ def reporte_obra(casa_id, obra_id):
         if isinstance(telfs, list):
             telf_str = ", ".join([str(t) for t in telfs])
         else:
-            telf_str = str(telfs) if telfs else "—"
+            telf_str = str(telfs) if telfs else "-"
 
         details = [
-            ("Ciudad:", obra_data.get('ciudad', '—')),
-            ("Apartado Postal:", obra_data.get('apartado_postal', '—')),
+            ("Ciudad:", obra_data.get('ciudad', '-')),
+            ("Apartado Postal:", obra_data.get('apartado_postal', '-')),
             ("Teléfonos:", telf_str),
-            ("Dirección:", obra_data.get('direccion', '—')),
-            ("Sitio Web:", obra_data.get('web', '—')),
-            ("Correo(s):", ", ".join(obra_data.get('correo', [])) if isinstance(obra_data.get('correo', []), list) else obra_data.get('correo', '—')),
+            ("Dirección:", obra_data.get('direccion', '-')),
+            ("Sitio Web:", obra_data.get('web', '-')),
+            ("Correo(s):", ", ".join(obra_data.get('correo', [])) if isinstance(obra_data.get('correo', []), list) else obra_data.get('correo', '-')),
         ]
         
         for label, value in details:
-            if value and str(value).strip() != '—':
+            if value and str(value).strip() != '-':
                 pdf.set_font("helvetica", "B", 10)
                 pdf.cell(40, 8, label)
                 pdf.set_font("helvetica", "", 10)
@@ -491,12 +491,12 @@ def reporte_obra(casa_id, obra_id):
         pdf.set_font("helvetica", "B", 10)
         pdf.cell(40, 8, "Persona:")
         pdf.set_font("helvetica", "", 10)
-        pdf.cell(0, 8, str(obra_data.get('contacto', '—')), ln=True)
+        pdf.cell(0, 8, str(obra_data.get('contacto', '-')), ln=True)
         
         pdf.set_font("helvetica", "B", 10)
         pdf.cell(40, 8, "Teléfono:")
         pdf.set_font("helvetica", "", 10)
-        pdf.cell(0, 8, str(obra_data.get('telefono_contacto', '—')), ln=True)
+        pdf.cell(0, 8, str(obra_data.get('telefono_contacto', '-')), ln=True)
         
         # Buffer
         output = io.BytesIO()
@@ -623,7 +623,7 @@ def _generar_word_base():
     footer = section.footer
     fp = footer.paragraphs[0]
     fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    fr = fp.add_run('Agenda SDB — Sistema de Gestión')
+    fr = fp.add_run('Agenda SDB - Sistema de Gestión')
     fr.font.size = Pt(8); fr.font.color.rgb = RGBColor(0x99, 0x99, 0x99); fr.italic = True
 
     return doc
@@ -656,22 +656,22 @@ def _tabla_casas(doc, obras, first_table=True):
             fill = 'F0F0F0' if idx % 2 == 1 else 'FFFFFF'
 
             telfs   = o.get('telefono', [])
-            telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '—')
+            telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '-')
 
             correos = o.get('correo', [])
-            email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '—')
+            email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '-')
 
-            ciudad = o.get('ciudad') or '—'
+            ciudad = o.get('ciudad') or '-'
             ap = o.get('apartado_postal')
             if ap: ciudad += f' (AP: {ap})'
 
-            cont_val  = o.get('contacto') or '—'
+            cont_val  = o.get('contacto') or '-'
 
             values = [
-                str(o.get('nombre_obra') or '—'),
+                str(o.get('nombre_obra') or '-'),
                 ciudad,
-                telf_str or '—',
-                email_str or '—',
+                telf_str or '-',
+                email_str or '-',
                 cont_val,
             ]
             for i, val in enumerate(values):
@@ -816,18 +816,18 @@ def reporte_casa_word(casa_id):
                 pPr3.append(shd3)
 
                 correos = o.get('correo', [])
-                email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '—')
+                email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '-')
                 telfs = o.get('telefono', [])
-                telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '—')
+                telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '-')
 
                 details = [
-                    ('Ciudad',           o.get('ciudad', '—')),
-                    ('Teléfono',         telf_str or '—'),
-                    ('Dirección',        o.get('direccion', '—')),
-                    ('Sitio Web',        o.get('web', '—')),
-                    ('Correo(s)',         email_str or '—'),
-                    ('Persona Contacto', o.get('contacto', '—')),
-                    ('Tlf. Contacto',    o.get('telefono_contacto', '—')),
+                    ('Ciudad',           o.get('ciudad', '-')),
+                    ('Teléfono',         telf_str or '-'),
+                    ('Dirección',        o.get('direccion', '-')),
+                    ('Sitio Web',        o.get('web', '-')),
+                    ('Correo(s)',         email_str or '-'),
+                    ('Persona Contacto', o.get('contacto', '-')),
+                    ('Tlf. Contacto',    o.get('telefono_contacto', '-')),
                 ]
                 # Mini tabla de detalles (2 columnas: etiqueta | valor)
                 dtbl = doc.add_table(rows=len(details), cols=2)
@@ -878,15 +878,15 @@ def reporte_obra_word(casa_id, obra_id):
             r.bold = True; r.font.size = Pt(18); r.font.color.rgb = COLOR_NAVY
         sub_p = doc.add_paragraph()
         sub_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        sub_r = sub_p.add_run(f'Perteneciente a: {casa.get("nombre", "—")}')
+        sub_r = sub_p.add_run(f'Perteneciente a: {casa.get("nombre", "-")}')
         sub_r.font.size = Pt(10); sub_r.font.color.rgb = RGBColor(0x60, 0x60, 0x60); sub_r.italic = True
 
         _add_section_divider(doc)
 
         correos = obra.get('correo', [])
-        email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '—')
+        email_str = ', '.join(correos) if isinstance(correos, list) else str(correos or '-')
         telfs = obra.get('telefono', [])
-        telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '—')
+        telf_str = ', '.join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '-')
 
         # Sección: Información General
         sec1_p = doc.add_paragraph()
@@ -899,12 +899,12 @@ def reporte_obra_word(casa_id, obra_id):
         sec1_p.paragraph_format.space_before = Pt(8); sec1_p.paragraph_format.space_after = Pt(4)
 
         gen_details = [
-            ('Ciudad',          obra.get('ciudad', '—')),
-            ('Apartado Postal', obra.get('apartado_postal', '—')),
-            ('Teléfonos',       telf_str or '—'),
-            ('Dirección',       obra.get('direccion', '—')),
-            ('Sitio Web',       obra.get('web', '—')),
-            ('Correo(s)',        email_str or '—'),
+            ('Ciudad',          obra.get('ciudad', '-')),
+            ('Apartado Postal', obra.get('apartado_postal', '-')),
+            ('Teléfonos',       telf_str or '-'),
+            ('Dirección',       obra.get('direccion', '-')),
+            ('Sitio Web',       obra.get('web', '-')),
+            ('Correo(s)',        email_str or '-'),
         ]
         gtbl = doc.add_table(rows=len(gen_details), cols=2)
         gtbl.style = 'Table Grid'
@@ -929,8 +929,8 @@ def reporte_obra_word(casa_id, obra_id):
         sec2_p.paragraph_format.space_before = Pt(8); sec2_p.paragraph_format.space_after = Pt(4)
 
         cont_details = [
-            ('Persona',    obra.get('contacto', '—')),
-            ('Teléfono',   obra.get('telefono_contacto', '—')),
+            ('Persona',    obra.get('contacto', '-')),
+            ('Teléfono',   obra.get('telefono_contacto', '-')),
         ]
         ctbl = doc.add_table(rows=len(cont_details), cols=2)
         ctbl.style = 'Table Grid'
