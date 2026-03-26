@@ -25,7 +25,7 @@ async function cargarUsuarios() {
     }
 
     tbody.innerHTML = filteredUsers.map(u => `
-      <tr class="${u.activo === false ? 'row-inactive' : ''}">
+      <tr class="${u.activo === false ? 'row-inactive' : ''}" onclick="verDetalleUsuario('${u._id}')" style="cursor: pointer;">
         <td data-label="Usuario">
             <div class="user-cell">
                 <div class="table-avatar" style="${u.activo === false ? 'filter: grayscale(1); opacity: 0.5;' : ''}">${u.nombre[0].toUpperCase()}</div>
@@ -38,19 +38,6 @@ async function cargarUsuarios() {
         <td data-label="Correo">${u.email}</td>
         <td data-label="Username"><code>${u.user}</code></td>
         <td data-label="Rol"><span class="badge badge-${u.rol}">${u.rol}</span></td>
-        <td data-label="Acciones">
-          <div style="display:flex; gap: 8px;">
-            <button class="btn-icon" onclick='verDetalleUsuario("${u._id}")' title="Ver Detalles">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </button>
-            <button class="btn-icon" onclick='confirmarDesactivar("${u._id}")' title="${u.activo === false ? 'Reactivar' : 'Desactivar'}" style="color: var(--accent);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/></svg>
-            </button>
-            <button class="btn-icon" onclick='confirmarEliminarUsuario("${u._id}")' title="Eliminar" style="color: var(--danger);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            </button>
-          </div>
-        </td>
       </tr>`).join('');
   } catch (err) {
     tbody.style.opacity = '1';
@@ -69,7 +56,7 @@ function openUserModal(id = null) {
   if (id) {
     const u = window.allUsersData.find(x => x._id === id);
     if (!u) return;
-    title.textContent = 'Editar Usuario';
+    title.textContent = 'Editar';
     formId.value = u._id;
     document.getElementById('u_nombre').value = u.nombre;
     document.getElementById('u_email').value = u.email;
@@ -79,7 +66,7 @@ function openUserModal(id = null) {
     hint.textContent = '(dejar vacío para no cambiar)';
     if (document.getElementById('btnDeleteUser')) document.getElementById('btnDeleteUser').style.display = 'block';
   } else {
-    title.textContent = 'Nuevo Usuario';
+    title.textContent = 'Nuevo';
     formId.value = '';
     document.getElementById('u_nombre').value = '';
     document.getElementById('u_email').value = '';
@@ -90,11 +77,13 @@ function openUserModal(id = null) {
     if (document.getElementById('btnDeleteUser')) document.getElementById('btnDeleteUser').style.display = 'none';
   }
   modal.classList.add('active');
+  toggleBodyScroll();
 }
 
 function closeUserModal(e = null) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById('userModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 function verDetalleUsuario(id) {
@@ -113,19 +102,39 @@ function verDetalleUsuario(id) {
   const avatar = document.getElementById('detalleUserAvatar');
   avatar.textContent = u.nombre[0].toUpperCase();
 
+  // Configurar botones de acción en el modal
+  const btnDesactivar = document.getElementById('btnDesactivarDesdeDetalle');
+  const txtDesactivar = document.getElementById('txtBtnDesactivar');
+  if (btnDesactivar) {
+      txtDesactivar.textContent = u.activo === false ? 'Reactivar' : 'Desactivar';
+      btnDesactivar.className = u.activo === false ? 'btn btn-secondary' : 'btn btn-secondary'; // Mantener estilo neutro o ajustar si se desea
+  }
+
   window.currentDetailUserId = id;
   document.getElementById('userDetailModal').classList.add('active');
+  toggleBodyScroll();
 }
 
 function closeUserDetailModal(e = null) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById('userDetailModal').classList.remove('active');
+  toggleBodyScroll();
 }
 
 function abrirEdicionUsuarioDesdeDetalle() {
   const id = window.currentDetailUserId;
   closeUserDetailModal();
-  openUserModal(id);
+  setTimeout(() => openUserModal(id), 100); // Pequeño delay para suavizar transición
+}
+
+function manejadorDesactivarDesdeDetalle() {
+    if (!window.currentDetailUserId) return;
+    confirmarDesactivar(window.currentDetailUserId);
+}
+
+function manejadorEliminarDesdeDetalle() {
+    if (!window.currentDetailUserId) return;
+    confirmarEliminarUsuario(window.currentDetailUserId);
 }
 
 function confirmarDesactivar(id) {

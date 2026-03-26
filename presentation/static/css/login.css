@@ -23,10 +23,9 @@
 /* ── DISEÑO LOGIN PREMIUM v2 ── */
 .auth-page {
     margin: 0;
-    padding: 12px;
+    padding: 0;
     min-height: 100vh;
     box-sizing: border-box;
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,7 +55,6 @@
     display: flex;
     width: 100%;
     max-width: 960px;
-    max-height: calc(100vh - 24px);
     background: var(--surface);
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
@@ -133,7 +131,6 @@
     flex-direction: column;
     justify-content: center;
     background: var(--surface);
-    overflow-y: auto;
 }
 
 .form-header {
@@ -221,8 +218,10 @@
     transition: color 0.3s;
 }
 
-.btn-toggle-view:hover {
-    color: #DC1E46;
+@media (hover: hover) {
+  .btn-toggle-view:hover {
+      color: #DC1E46;
+  }
 }
 
 /* Custom Checkbox */
@@ -245,8 +244,10 @@
     transition: color 0.3s ease;
 }
 
-.remember-me:hover {
-    color: var(--text);
+@media (hover: hover) {
+  .remember-me:hover {
+      color: var(--text);
+  }
 }
 
 /* Hidden native checkbox */
@@ -269,9 +270,11 @@
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.remember-me:hover .custom-checkbox {
-    border-color: var(--primary);
-    background: var(--primary-light);
+@media (hover: hover) {
+  .remember-me:hover .custom-checkbox {
+      border-color: var(--primary);
+      background: var(--primary-light);
+  }
 }
 
 .remember-me input:checked ~ .custom-checkbox {
@@ -337,13 +340,14 @@
     transition: opacity 0.3s;
 }
 
-.btn-submit:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 20px 30px -10px rgba(220, 30, 70, 0.5);
-}
-
-.btn-submit:hover::after {
-    opacity: 1;
+@media (hover: hover) {
+  .btn-submit:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 20px 30px -10px rgba(220, 30, 70, 0.5);
+  }
+  .btn-submit:hover::after {
+      opacity: 1;
+  }
 }
 
 .btn-submit:active {
@@ -385,10 +389,12 @@
     position: relative;
 }
 
-.session-card:hover {
-    border-color: #DC1E46;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px -4px rgba(220, 30, 70, 0.15);
+@media (hover: hover) {
+  .session-card:hover {
+      border-color: #DC1E46;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px -4px rgba(220, 30, 70, 0.15);
+  }
 }
 
 .session-card .avatar {
@@ -448,30 +454,45 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.session-card:hover .btn-remove {
-    opacity: 1;
-    transform: scale(1);
+@media (hover: hover) {
+  .session-card:hover .btn-remove {
+      opacity: 1;
+      transform: scale(1);
+  }
 }
 
-.session-card .btn-remove:hover {
-    background: #DC1E46;
-    color: white;
-    border-color: #DC1E46;
+@media (hover: hover) {
+  .session-card .btn-remove:hover {
+      background: #DC1E46;
+      color: white;
+      border-color: #DC1E46;
+  }
 }
 
 /* Responsividad */
 @media (max-width: 768px) {
+    .auth-page {
+        padding: 0;
+        align-items: flex-start;
+    }
     .auth-wrapper {
         flex-direction: column;
-        max-width: 450px;
+        max-width: 100%;
         border-radius: 0;
         margin: 0;
+        border: none;
+        animation: none;
     }
     .auth-side-info {
-        padding: 32px 24px;
+        flex: 0 0 auto;
+        padding: 40px 24px 30px 24px;
+        text-align: center;
+    }
+    .logo-white {
+        margin: 0 auto 20px auto;
     }
     .auth-side-form {
-        padding: 40px 24px;
+        padding: 30px 24px 60px 24px;
     }
 }
 /* ── DARK MODE - LOGIN ── */
@@ -492,13 +513,17 @@
 [data-theme='dark'] .form-header h2 { color: #f1f5f9; }
 [data-theme='dark'] .form-header p  { color: #94a3b8; }
 [data-theme='dark'] .forgot-link { color: #94a3b8; }
-[data-theme='dark'] .forgot-link:hover { color: var(--primary); }
+@media (hover: hover) {
+  [data-theme='dark'] .forgot-link:hover { color: var(--primary); }
+}
 [data-theme='dark'] .custom-checkbox {
     background: #253347;
     border-color: rgba(255,255,255,0.1);
 }
 [data-theme='dark'] .btn-remove { border-color: rgba(255,255,255,0.08); color: #94a3b8; }
-[data-theme='dark'] .btn-remove:hover { background: #DC1E46; color: white; border-color: #DC1E46; }
+@media (hover: hover) {
+  [data-theme='dark'] .btn-remove:hover { background: #DC1E46; color: white; border-color: #DC1E46; }
+}
 
 /* ── PREVENT SCROLL ON LARGE RESOLUTIONS ── */
 @media (min-width: 992px) {

@@ -28,11 +28,10 @@
         <th>Correo</th>
         <th>Username</th>
         <th>Rol</th>
-        <th>Acciones</th>
       </tr>
     </thead>
     <tbody id="usersBody">
-      <tr><td colspan="5" class="loading-row">Cargando...</td></tr>
+      <tr><td colspan="4" class="loading-row">Cargando...</td></tr>
     </tbody>
   </table>
 </div>
@@ -83,15 +82,26 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeUserDetailModal()">Cerrar</button>
-      {% if session.get('rol') in ['admin', 'superadmin'] %}
-      <button class="btn btn-primary" id="btnEditarUsuarioDesdeDetalle" onclick="abrirEdicionUsuarioDesdeDetalle()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-        Editar Usuario
-      </button>
-      {% endif %}
+      <div class="footer-actions">
+          {% if session.get('rol') in ['admin', 'superadmin'] %}
+          <button class="btn btn-primary" id="btnEditarDesdeDetalle" onclick="abrirEdicionUsuarioDesdeDetalle()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
+
+          <button class="btn btn-secondary" id="btnDesactivarDesdeDetalle" onclick="manejadorDesactivarDesdeDetalle()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/></svg>
+            <span id="txtBtnDesactivar">Desactivar</span>
+          </button>
+          {% endif %}
+          
+          {% if session.get('rol') == 'superadmin' %}
+          <button class="btn btn-danger" id="btnEliminarDesdeDetalle" onclick="manejadorEliminarDesdeDetalle()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Eliminar
+          </button>
+          {% endif %}
+      </div>
     </div>
   </div>
 </div>

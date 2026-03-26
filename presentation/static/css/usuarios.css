@@ -25,7 +25,9 @@
 }
 .data-table td { padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: .95rem; vertical-align: middle; }
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: var(--primary-light); }
+@media (hover: hover) {
+  .data-table tr:hover td { background: var(--primary-light); }
+}
 
 .user-cell { display: flex; align-items: center; gap: 12px; }
 .table-avatar { 
@@ -48,9 +50,14 @@
 .badge-superadmin { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
 .badge-admin { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
 .badge-user { background: var(--surface2); color: var(--text-2); border: 1px solid var(--border); }
+.data-table tr { cursor: pointer; transition: all 0.2s; }
+@media (hover: hover) {
+  .data-table tr:hover td { background: var(--primary-light); transform: scale(1.002); }
+}
 
 /* ── RESPONSIVE: TABLE TO CARDS ── */
 @media (max-width: 768px) {
+    .page-header { flex-direction: column; align-items: stretch; gap: 16px; text-align: center; }
     .table-container { border: none; background: none; box-shadow: none; }
     .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr { 
         display: block; 
@@ -63,13 +70,19 @@
         border: 1px solid var(--border);
         border-radius: 20px;
         margin-bottom: 20px;
-        padding: 20px;
+        padding: 24px;
         box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .data-table tr:active {
+        transform: scale(0.98);
+        box-shadow: none;
     }
     
     .data-table td {
         border: none;
-        padding: 8px 0;
+        padding: 12px 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -86,20 +99,13 @@
         margin-right: 12px;
     }
     
-    .data-table td:last-child {
-        margin-top: 12px;
-        padding-top: 16px;
-        border-top: 1px solid var(--border);
-        justify-content: flex-end;
-    }
-    
     .user-cell { justify-content: flex-end; }
 }
 
 
 
 /* ── PREMIUM DETAIL MODAL ── */
-.detail-modal-premium { border-radius: 28px !important; max-width: 500px !important; overflow: hidden; }
+.detail-modal-premium { border-radius: 28px; max-width: 500px; overflow: hidden; }
 
 .modal-header-hero { 
   position: relative; display: flex; align-items: center; padding: 32px 32px 24px 32px;
@@ -122,11 +128,17 @@
 
 .modal-close-hero {
   position: absolute; top: 15px; right: 15px; width: 32px; height: 32px;
-  background: var(--surface); color: var(--text-2); border: 1px solid var(--border); border-radius: 50%;
+  background: transparent; color: var(--text-2); border: none; border-radius: 50%;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   z-index: 2; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.modal-close-hero:hover { background: var(--danger); color: white; border-color: var(--danger); transform: rotate(90deg) scale(1.1); }
+@media (hover: hover) {
+  .modal-close-hero:hover { 
+    background: var(--surface2); 
+    color: var(--danger); 
+    transform: rotate(90deg) scale(1.1); 
+  }
+}
 
 .profile-body-premium { padding: 32px !important; background: var(--surface); }
 
@@ -139,19 +151,25 @@
     display: flex; align-items: center; justify-content: center; border-radius: 12px;
     flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.info-item-premium:hover .info-icon-premium { transform: scale(1.1) rotate(5deg); background: var(--primary); color: #fff; }
+@media (hover: hover) {
+  .info-item-premium:hover .info-icon-premium { transform: scale(1.1) rotate(5deg); background: var(--primary); color: #fff; }
+}
 
 .info-content-premium { display: flex; flex-direction: column; gap: 2px; }
 .info-content-premium label { font-size: 0.7rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
 .info-content-premium span, .info-content-premium code { font-size: 1.1rem; font-weight: 700; color: var(--secondary); word-break: break-all; }
+
+
 
 /* ── INACTIVE USERS ── */
 .row-inactive {
     background: var(--bg) !important;
     opacity: 0.6;
 }
-.row-inactive:hover td {
+@media (hover: hover) {
+  .row-inactive:hover td {
     background: var(--surface2) !important;
+  }
 }
 .row-inactive .user-info-name {
     text-decoration: line-through;
@@ -174,7 +192,9 @@
 [data-theme='dark'] .profile-body-premium { background: var(--surface); }
 
 /* Table hover: primary-light is pinkish — use subtle dark instead */
-[data-theme='dark'] .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+@media (hover: hover) {
+  [data-theme='dark'] .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+}
 
 /* Role badges: hardcoded light colors adapt to dark */
 [data-theme='dark'] .badge-superadmin {
@@ -187,3 +207,69 @@
   color: #93c5fd;
   border-color: rgba(29,78,216,0.3);
 }
+
+/* ── BULLETPROOF USER MOBILE REFINEMENTS ── */
+@media (max-width: 768px) {
+  .detail-modal-premium { 
+    border-radius: 0 !important; 
+    max-width: none !important; 
+    width: 100% !important; 
+    height: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+  
+  .modal-header-hero { 
+    padding: 20px !important; 
+    min-height: 80px !important; 
+    border-bottom: 1.5px solid var(--border) !important;
+    background: var(--surface) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+  }
+  
+  .hero-avatar-container { 
+    width: 48px !important; 
+    height: 48px !important; 
+    font-size: 1.2rem !important; 
+    border-radius: 12px !important;
+  }
+  
+  .hero-text h2 { 
+    font-size: 1.15rem !important; 
+  }
+  
+  .profile-body-premium { 
+    padding: 32px 20px !important; 
+  }
+  
+  .info-list-premium { 
+    gap: 32px !important; 
+  }
+  
+  .info-item-premium { 
+    gap: 16px !important; 
+  }
+  
+  .info-icon-premium { 
+    width: 40px !important; 
+    height: 40px !important; 
+    border-radius: 10px !important; 
+  }
+  
+  .info-content-premium span { 
+    font-size: 1rem !important; 
+  }
+  
+  /* Modal Footer for User (if any) */
+  .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--surface) !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 20px !important;
+    z-index: 100 !important;
+  }
+}
+

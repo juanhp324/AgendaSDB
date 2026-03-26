@@ -5,12 +5,6 @@ let isEditingObraDirectly = false;
 let searchTimeout = null;
 
 // --- Funciones Principales ---
-function toggleBodyScroll() {
-  const anyActive = !!document.querySelector('.modal-overlay.active');
-  document.body.classList.toggle('modal-open', anyActive);
-  document.documentElement.classList.toggle('modal-open', anyActive);
-}
-
 async function cargarCasas(q = '') {
   const grid = document.getElementById('casasGrid');
   if (!grid) return;
@@ -34,17 +28,19 @@ async function cargarCasas(q = '') {
     casasData = data.casas;
     renderCasas(casasData);
     
-    // Refresh AOS and Init Tilt after rendering
+    // Refresh AOS and Init Tilt after rendering (only for non-touch devices)
     setTimeout(() => {
       if (typeof AOS !== 'undefined') AOS.refresh();
-      if (typeof VanillaTilt !== 'undefined') {
+      
+      const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      if (typeof VanillaTilt !== 'undefined' && !isTouchDevice) {
         VanillaTilt.init(document.querySelectorAll(".casa-card"), {
-          max: 5, // Reduced from 10
-          speed: 800, // Faster return
+          max: 5, 
+          speed: 800, 
           glare: true,
-          "max-glare": 0.1, // Reduced glare
-          scale: 1.01, // Reduced scale
-          gyroscope: false // Disable gyro to avoid weirdness on mobile
+          "max-glare": 0.1, 
+          scale: 1.01, 
+          gyroscope: false 
         });
       }
     }, 50);
@@ -68,7 +64,6 @@ function renderCasas(casas) {
     <div class="casa-card" 
          data-aos="fade" 
          data-aos-delay="${index * 30}"
-         data-tilt
          onclick="verDetalleCasa('${c._id}')">
       <div style="height: 6px; background: ${genderColor};"></div>
       <div style="padding: 24px; flex-grow: 1; display:flex; flex-direction:column;">
@@ -87,9 +82,7 @@ function renderCasas(casas) {
           </div>
         </div>
         <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.3px;">${c.nombre}</h3>
-        <div class="casa-history-scroll">
-          ${c.historia || 'Sin historia registrada.'}
-        </div>
+        <div style="margin-top: auto; padding-top: 10px;"></div>
       </div>
       <div style="padding: 16px 24px; background: var(--surface2); border-top: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
         <span style="color: #DC1E46; font-size: 0.85rem; font-weight: 700;">Ver detalles →</span>
@@ -290,7 +283,7 @@ function abrirEdicionDesdeDetalle() {
 
 function openCasaModal(c = null) {
   document.getElementById('casa_id').value = c ? c._id : '';
-  document.getElementById('modalCasaTitle').textContent = c ? 'Editar Casa Salesiana' : 'Nueva Casa Salesiana';
+  document.getElementById('modalCasaTitle').textContent = c ? 'Editar' : 'Nueva';
 
   document.getElementById('casa_nombre').value = c ? (c.nombre || '') : '';
   document.getElementById('casa_historia').value = c ? (c.historia || '') : '';
@@ -360,7 +353,7 @@ function openObraModal(obraId = null, directObraObj = null) {
 
   const o = directObraObj || (obraId ? tempObras.find(x => x.id === obraId) : null);
 
-  document.getElementById('modalObraTitle').textContent = o ? 'Editar Obra' : 'Agregar Obra';
+  document.getElementById('modalObraTitle').textContent = o ? 'Editar' : 'Agregar';
   document.getElementById('obra_temp_id').value = o ? o.id : '';
 
   document.getElementById('obra_nombre').value = o ? (o.nombre_obra || '') : '';

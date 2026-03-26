@@ -102,57 +102,57 @@
           <p id="detalleCasaHistoria" class="history-text-premium"></p>
       </div>
 
-      <div class="obras-section" style="margin-top: 10px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-           <h3 style="color:var(--text); font-size:1.4rem; margin:0; font-weight:800; letter-spacing:-0.4px;">Obras Vinculadas</h3>
-           <div style="background:var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; padding: 0 16px; width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;" onfocusin="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(220, 30, 70, 0.1)';" onfocusout="this.style.borderColor='var(--border)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';" >
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2.5">
-               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-             </svg>
-             <input type="text" id="searchInputObras" placeholder="Filtrar por nombre..." oninput="buscarObrasDetalle()" style="border:none; outline:none; font-size:0.9rem; padding: 12px; width:100%; color:var(--text); background:transparent;"/>
+      <div class="obras-section-premium">
+        <div class="section-header-premium">
+           <h3 class="section-title-premium">Obras Vinculadas</h3>
+           <div class="search-container-premium">
+             <div class="search-inner-premium">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+               <input type="text" id="searchInputObras" placeholder="Filtrar por nombre..." oninput="buscarObrasDetalle()"/>
+             </div>
            </div>
         </div>
 
         
-        <div id="detalleObrasGrid" class="cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+        <div id="detalleObrasGrid" class="cards-grid">
         </div>
+      </div>
+
+      <!-- Acciones de Reporte (Movidas aquí para optimizar espacio) -->
+      <div class="actions-section-premium">
+          <h4 class="actions-label">REPORTES Y DOCUMENTACIÓN</h4>
+          <div class="actions-grid-premium">
+              <a id="btnReporteCasa" href="#" class="action-btn-premium">
+                <div class="action-icon-wrapper pdf">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span>Descargar PDF</span>
+              </a>
+              <a id="btnReporteCasaWord" href="#" class="action-btn-premium">
+                <div class="action-icon-wrapper word">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span>Descargar Word</span>
+              </a>
+          </div>
       </div>
     </div>
 
-    <div class="modal-footer">
-
-      <div class="footer-left" style="display: flex; gap: 12px; margin-right: auto;">
-        <a id="btnReporteCasa" href="#" class="btn btn-secondary" style="border-radius:12px; padding:10px 20px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-          </svg>
-          Reporte PDF
-        </a>
-        <a id="btnReporteCasaWord" href="#" class="btn btn-secondary" style="border-radius:12px; padding:10px 20px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-          </svg>
-          Reporte Word
-        </a>
-      </div>
-      <div class="footer-right" style="display: flex; gap: 12px;">
-        <button class="btn btn-ghost" onclick="closeCasaDetalleModal()" style="margin-right:8px;">Cerrar</button>
-        {% if session.get('rol') in ['admin','superadmin'] %}
-        <button class="btn btn-primary" id="btnIrAEditar" onclick="abrirEdicionDesdeDetalle()" style="border-radius:12px; padding:10px 24px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Editar Casa
-        </button>
-        {% endif %}
-      </div>
+    <div class="modal-footer premium-footer">
+      {% if session.get('rol') in ['admin','superadmin'] %}
+      <button class="btn-premium-primary" id="btnIrAEditar" onclick="abrirEdicionDesdeDetalle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar Casa
+      </button>
+      {% endif %}
+      <button class="btn-premium-ghost" onclick="closeCasaDetalleModal()">Cerrar</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL DETALLE OBRA -->
 <div class="modal-overlay" id="obraDetalleModal">
-  <div class="modal" style="max-width: 750px; border-radius: 24px;">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <div class="modal-icon-container">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M9 17h6"/><path d="M4 17h1v4H4zm15 0h1v4h-1z"/><path d="M10 3h4v4h-4z"/></svg>
@@ -161,7 +161,7 @@
       <button class="modal-close" onclick="closeObraDetalleModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="detail-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div class="detail-info-grid">
         <div class="info-group">
           <label>Ciudad</label>
           <span id="detalleObraCiudad"></span>
@@ -233,7 +233,7 @@
 
 <!-- MODAL NUEVA/EDITAR CASA -->
 <div class="modal-overlay" id="casaModal">
-  <div class="modal modal-lg" style="max-height: 95vh; border-radius: 24px;">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <div class="modal-icon-container">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M9 21V9l3-3 3 3v12"/><path d="M2 21h4V12h3"/><path d="M15 12h3v9h4"/></svg>

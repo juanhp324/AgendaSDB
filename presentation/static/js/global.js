@@ -57,6 +57,18 @@ function showToast(message, type = 'success') {
     }).showToast();
 }
 
+// --- Global Body Scroll Lock ---
+function toggleBodyScroll() {
+    const anyActive = !!document.querySelector('.modal-overlay.active');
+    if (anyActive) {
+        document.body.classList.add('modal-open');
+        document.documentElement.classList.add('modal-open');
+    } else {
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+    }
+}
+
 // --- Global Status Modal (Animated) ---
 // Note: We could use Swal for this but keeping it for now as a lightweight loader
 function showStatusModal(type, title, message) {
@@ -80,11 +92,15 @@ function showStatusModal(type, title, message) {
     `;
 
     modal.classList.add('active');
+    toggleBodyScroll();
 }
 
 function closeStatusModal() {
     const modal = document.getElementById('statusModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+        modal.classList.remove('active');
+        toggleBodyScroll();
+    }
 }
 
 // --- Global Confirm Modal (Powered by SweetAlert2) ---
@@ -171,6 +187,7 @@ async function openPerfilModal() {
             document.getElementById('perfil_password').value = '';
 
             modal.classList.add('active');
+            toggleBodyScroll();
             document.getElementById('userDropdown').classList.remove('open');
             document.getElementById('userMenuBtn').removeAttribute('data-open');
         } else {
@@ -186,6 +203,7 @@ function closePerfilModal(e) {
     if (!modal) return;
     if (e && e.target !== modal && !e.target.classList.contains('modal-close') && !e.target.classList.contains('btn-ghost')) return;
     modal.classList.remove('active');
+    toggleBodyScroll();
 }
 
 async function guardarPerfil() {
