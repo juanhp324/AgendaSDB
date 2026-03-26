@@ -11,6 +11,8 @@ from fpdf import FPDF
 from datetime import datetime
 from flask import send_file
 import io
+import traceback
+import sys
 
 bp = Blueprint('RCasas', __name__)
 
@@ -96,7 +98,7 @@ def create_casa():
         result = MCasas.createCasa(casa_data)
         return jsonify({
             "success": True,
-            "message": "Casa Salesiana creada exitosamente",
+            "message": "Instituto Salesiano creado exitosamente",
             "casa_id": str(result.inserted_id)
         }), 201
     except ValueError as exc:
@@ -113,7 +115,7 @@ def update_casa(casa_id):
         casa_data = validator.validation()
         result = MCasas.updateCasa(casa_id, casa_data)
         if result.modified_count > 0:
-            return jsonify({"success": True, "message": "Casa actualizada exitosamente"})
+            return jsonify({"success": True, "message": "Instituto actualizado exitosamente"})
         return jsonify({"success": False, "message": "No se realizaron cambios"}), 200
     except ValueError as exc:
         return jsonify({"success": False, "message": str(exc)}), 400
@@ -126,8 +128,8 @@ def delete_casa(casa_id):
     try:
         result = MCasas.deleteCasa(casa_id)
         if result.deleted_count > 0:
-            return jsonify({"success": True, "message": "Casa eliminada exitosamente"})
-        return jsonify({"success": False, "message": "Casa no encontrada"}), 404
+            return jsonify({"success": True, "message": "Instituto eliminado exitosamente"})
+        return jsonify({"success": False, "message": "Instituto no encontrado"}), 404
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
 
@@ -144,7 +146,7 @@ class PDF(FPDF):
         self.set_x(33)
         self.set_font("helvetica", "B", 12)
         self.set_text_color(44, 62, 80) # SDB Blue
-        self.cell(0, 6, "CONDOR, La Vega R.D.", ln=True, align='L')
+        self.cell(0, 6, "CÓNDOR, La Vega R.D.", ln=True, align='L')
         
         self.set_x(33)
         self.set_font("helvetica", "", 10)
@@ -176,8 +178,8 @@ def reporte_casas():
         
         # 1. Agrupar casas por tipo (Solo Masculino y Femenino como pidió el usuario)
         labels = {
-            'masculino': 'CASAS MASCULINAS (SDB)',
-            'femenino': 'CASAS FEMENINAS (FMA / HH.SS.)'
+            'masculino': 'Institutos Masculinos (SDB)',
+            'femenino': 'Institutos Femeninos (FMA / HH.SS.)'
         }
         
         grupos = {
@@ -246,7 +248,7 @@ def reporte_casas():
                 pdf.set_font("helvetica", "B", 10)
                 pdf.set_fill_color(44, 62, 80) # SDB Blue
                 pdf.set_text_color(255, 255, 255)
-                pdf.cell(sum(w), 9, f" CASA: {nombre_casa.upper()}", border=1, ln=True, fill=True, align='L')
+                pdf.cell(sum(w), 9, f" Instituto: {nombre_casa.upper()}", border=1, ln=True, fill=True, align='L')
                 
                 # 4. Sub-header for Columns
                 pdf.set_font("helvetica", "B", 9)
@@ -273,29 +275,49 @@ def reporte_casas():
                         # Zebra striping
                         pdf.set_fill_color(248, 249, 250) if fill else pdf.set_fill_color(255, 255, 255)
                         
-                        nombre_obra = (o.get('nombre_obra') or '-')[:40]
+                        nombre_obra = (o.get('nombre_obra') or '-')
                         ap = o.get('apartado_postal')
                         ciudad_text = o.get('ciudad') or '-'
                         if ap:
                             ciudad_text = f"{ciudad_text} (AP: {ap})"
-                        ciudad = str(ciudad_text)[:20]
+                        ciudad = str(ciudad_text)
                         
                         telfs = o.get('telefono', [])
-                        tel = ", ".join([str(t) for t in telfs])[:20] if isinstance(telfs, list) else str(telfs)[:20]
+                        tel = ", ".join([str(t) for t in telfs]) if isinstance(telfs, list) else str(telfs or '-')
                         
                         correos = o.get('correo', [])
                         cont_val = (o.get('contacto') or '-')
                         if correos:
                             email_str = ", ".join(correos) if isinstance(correos, list) else str(correos)
-                            cont = f"{cont_val} ({email_str})"[:30]
+                            cont = f"{cont_val} ({email_str})"
                         else:
-                            cont = cont_val[:30]
+                            cont = cont_val
                         
-                        pdf.cell(w[0], 8, f" {nombre_obra}", border=1, fill=True)
-                        pdf.cell(w[1], 8, ciudad, border=1, fill=True, align='C')
-                        pdf.cell(w[2], 8, tel, border=1, fill=True, align='C')
-                        pdf.cell(w[3], 8, cont, border=1, fill=True)
-                        pdf.ln()
+                        row_data = [f" {nombre_obra}", ciudad, tel, cont]
+                        
+                        # CALCULAR ALTURA DE FILA (Smart Wrap)
+                        # Usamos dry_run para saber cuántas líneas ocupará cada celda
+                        lines_cols = [len(pdf.multi_cell(w[i], 5, text, dry_run=True, output="LINES")) for i, text in enumerate(row_data)]
+                        max_lines = max(lines_cols)
+                        row_h = max_lines * 5
+                        if row_h < 8: row_h = 8
+                        
+                        # Salto de página preventivo
+                        if pdf.get_y() + row_h > 275:
+                            pdf.add_page()
+                        
+                        curr_y = pdf.get_y()
+                        for i, text in enumerate(row_data):
+                            x_pos = 10 + sum(w[:i])
+                            pdf.set_xy(x_pos, curr_y)
+                            # Dibujar fondo y borde
+                            pdf.cell(w[i], row_h, "", border=1, fill=True)
+                            # Dibujar texto al ras
+                            pdf.set_xy(x_pos, curr_y)
+                            pdf.multi_cell(w[i], 5, text, align='L' if i == 0 or i == 3 else 'C')
+                        
+                        pdf.set_y(curr_y + row_h)
+                        pdf.set_x(10)
                         fill = not fill
                 
                 pdf.ln(4) # Space between Casas
@@ -317,6 +339,9 @@ def reporte_casas():
         )
         
     except Exception as exc:
+        with open("/tmp/error_agenda.log", "a") as f:
+            f.write(f"\n--- Error en reporte_casas {datetime.now()} ---\n")
+            traceback.print_exc(file=f)
         print(f"Error generando reporte: {exc}")
         return "Error al generar el reporte", 500
 
@@ -325,7 +350,7 @@ def reporte_casa(casa_id):
     try:
         casa = MCasas.getCasaById(casa_id)
         if not casa:
-            return "Casa no encontrada", 404
+            return "Instituto no encontrado", 404
             
         # Create PDF instance
         pdf = PDF()
@@ -342,18 +367,20 @@ def reporte_casa(casa_id):
         # Title
         pdf.set_font("helvetica", "B", 16)
         pdf.set_text_color(44, 62, 80)
-        pdf.cell(0, 10, casa.get('nombre', 'Detalle de la Casa'), ln=True, align='C')
-        pdf.ln(10)
+        pdf.multi_cell(0, 10, casa.get('nombre', 'Detalle de la Casa'), align='C', new_x='LMARGIN', new_y='NEXT')
+        pdf.ln(5)
         
         # History section
         historia = casa.get('historia', '').strip()
         if historia:
             pdf.set_font("helvetica", "B", 12)
             pdf.set_fill_color(240, 240, 240)
+            pdf.set_text_color(44, 62, 80) # SDB Blue
             pdf.cell(0, 10, "  Reseña Histórica", ln=True, fill=True)
             pdf.ln(4)
+            pdf.set_text_color(0, 0, 0) # Black for the content
             pdf.set_font("helvetica", "", 10)
-            pdf.multi_cell(0, 6, historia)
+            pdf.multi_cell(0, 6, historia, new_x='LMARGIN', new_y='NEXT')
             pdf.ln(5)
 
         # Obras
@@ -384,15 +411,17 @@ def reporte_casa(casa_id):
 
                 pdf.set_font("helvetica", "B", 12)
                 pdf.set_fill_color(240, 240, 240)
+                pdf.set_text_color(44, 62, 80) # SDB Blue
                 pdf.cell(0, 10, f"  {o.get('nombre_obra', 'Obra')}", ln=True, fill=True)
                 pdf.ln(2)
+                pdf.set_text_color(0, 0, 0) # Black for details
                 
                 for label, value in detalles_obra:
                     if value and str(value).strip() != '-':
                         pdf.set_font("helvetica", "B", 10)
-                        pdf.cell(40, 8, label)
+                        pdf.write(8, label + " ")
                         pdf.set_font("helvetica", "", 10)
-                        pdf.cell(0, 8, str(value), ln=True)
+                        pdf.write(8, str(value) + "\n")
                 pdf.ln(5)
             
         # Buffer
@@ -412,6 +441,9 @@ def reporte_casa(casa_id):
         )
         
     except Exception as exc:
+        with open("/tmp/error_agenda.log", "a") as f:
+            f.write(f"\n--- Error en reporte_casa {datetime.now()} ---\n")
+            traceback.print_exc(file=f)
         print(f"Error generando reporte de casa: {exc}")
         return "Error al generar el reporte", 500
 
@@ -420,7 +452,7 @@ def reporte_obra(casa_id, obra_id):
     try:
         casa = MCasas.getCasaById(casa_id)
         if not casa:
-            return "Casa no encontrada", 404
+            return "Instituto no encontrado", 404
             
         obras = casa.get('obras', [])
         obra_data = next((o for o in obras if o.get('id') == obra_id), None)
@@ -442,16 +474,18 @@ def reporte_obra(casa_id, obra_id):
         # Title
         pdf.set_font("helvetica", "B", 16)
         pdf.set_text_color(44, 62, 80)
-        pdf.cell(0, 10, obra_data.get('nombre_obra', 'Detalle de la Obra'), ln=True, align='C')
+        pdf.multi_cell(0, 10, obra_data.get('nombre_obra', 'Detalle de la Obra'), align='C', new_x='LMARGIN', new_y='NEXT')
         
         # Subtitle Casa Perteneciente
         casa_nombre = (casa.get('nombre') or '-') if casa else "-"
-        pdf.cell(0, 8, f"Perteneciente a: {casa_nombre}", ln=True, align='C')
-        pdf.ln(10)
+        pdf.set_font("helvetica", "I", 10)
+        pdf.multi_cell(0, 8, f"Perteneciente a: {casa_nombre}", align='C', new_x='LMARGIN', new_y='NEXT')
+        pdf.ln(5)
         
         # Info sections
         pdf.set_font("helvetica", "B", 12)
         pdf.set_fill_color(240, 240, 240)
+        pdf.set_text_color(44, 62, 80) # SDB Blue
         pdf.cell(0, 10, "  Información General", ln=True, fill=True)
         pdf.ln(2)
         
@@ -476,27 +510,29 @@ def reporte_obra(casa_id, obra_id):
         for label, value in details:
             if value and str(value).strip() != '-':
                 pdf.set_font("helvetica", "B", 10)
-                pdf.cell(40, 8, label)
+                pdf.write(8, label + " ")
                 pdf.set_font("helvetica", "", 10)
-                pdf.cell(0, 8, str(value), ln=True)
+                pdf.write(8, str(value) + "\n")
             
         pdf.ln(5)
         
         # Contact section
         pdf.set_font("helvetica", "B", 12)
         pdf.set_fill_color(240, 240, 240)
+        pdf.set_text_color(44, 62, 80) # SDB Blue
         pdf.cell(0, 10, "  Información de Contacto", ln=True, fill=True)
         pdf.ln(2)
+        pdf.set_text_color(0, 0, 0) # Black for values
         
         pdf.set_font("helvetica", "B", 10)
-        pdf.cell(40, 8, "Persona:")
+        pdf.write(8, "Persona: ")
         pdf.set_font("helvetica", "", 10)
-        pdf.cell(0, 8, str(obra_data.get('contacto', '-')), ln=True)
+        pdf.write(8, str(obra_data.get('contacto', '-')) + "\n")
         
         pdf.set_font("helvetica", "B", 10)
-        pdf.cell(40, 8, "Teléfono:")
+        pdf.write(8, "Teléfono: ")
         pdf.set_font("helvetica", "", 10)
-        pdf.cell(0, 8, str(obra_data.get('telefono_contacto', '-')), ln=True)
+        pdf.write(8, str(obra_data.get('telefono_contacto', '-')) + "\n")
         
         # Buffer
         output = io.BytesIO()
@@ -515,6 +551,9 @@ def reporte_obra(casa_id, obra_id):
         )
         
     except Exception as exc:
+        with open("/tmp/error_agenda.log", "a") as f:
+            f.write(f"\n--- Error en reporte_obra {datetime.now()} ---\n")
+            traceback.print_exc(file=f)
         print(f"Error generando reporte de obra: {exc}")
         return "Error al generar el reporte", 500
 
@@ -604,7 +643,7 @@ def _generar_word_base():
     # Celda institución
     inst_cell = htbl.cell(0, 1)
     inst_p = inst_cell.paragraphs[0]
-    r1 = inst_p.add_run('CONDOR, La Vega R.D.\n')
+    r1 = inst_p.add_run('CÓNDOR, La Vega R.D.\n')
     r1.bold = True; r1.font.size = Pt(11); r1.font.color.rgb = COLOR_NAVY
     r2 = inst_p.add_run('Diocesis de La Vega')
     r2.font.size = Pt(9); r2.font.color.rgb = RGBColor(0x60, 0x60, 0x60)
@@ -691,8 +730,8 @@ def reporte_casas_word():
             else: grupos['masculino'].append(c)
 
         labels = {
-            'masculino': 'CASAS MASCULINAS (SDB)',
-            'femenino':  'CASAS FEMENINAS (FMA / HH.SS.)'
+            'masculino': 'Institutos Masculinos (SDB)',
+            'femenino':  'Institutos Femeninos (FMA / HH.SS.)'
         }
 
         doc = _generar_word_base()
@@ -725,12 +764,11 @@ def reporte_casas_word():
                 nombre_casa = c.get('nombre', '').strip()
                 obras = c.get('obras', [])
 
-                # ── Nombre de la Casa (encabezado azul marino) ──
+                # ── Nombre del Instituto (encabezado azul marino) ──
                 casa_p = doc.add_paragraph()
                 casa_p.paragraph_format.space_before = Pt(10)
                 casa_p.paragraph_format.space_after  = Pt(3)
-                _set_cell_bg  # only for tables, use run color here
-                casa_r = casa_p.add_run(f'  CASA: {nombre_casa.upper()}  ')
+                casa_r = casa_p.add_run(f'  INSTITUTO: {nombre_casa.upper()}  ')
                 casa_r.bold = True; casa_r.font.size = Pt(11); casa_r.font.color.rgb = COLOR_WHITE
                 # Simulate dark background via XML shading on the paragraph
                 pPr2 = casa_p._p.get_or_add_pPr()
@@ -745,7 +783,7 @@ def reporte_casas_word():
         output = io.BytesIO()
         doc.save(output)
         output.seek(0)
-        filename = f"Reporte_Casas_{datetime.now().strftime('%Y%m%d')}.docx"
+        filename = f"Reporte_Institutos_{datetime.now().strftime('%Y%m%d')}.docx"
         return send_file(output,
                          mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                          as_attachment=True, download_name=filename)
@@ -772,7 +810,7 @@ def reporte_casa_word(casa_id):
         tp = doc.add_paragraph()
         tp.alignment = WD_ALIGN_PARAGRAPH.CENTER
         tp.paragraph_format.space_before = Pt(6)
-        tr = tp.add_run(casa.get('nombre', 'Detalle de la Casa'))
+        tr = tp.add_run(casa.get('nombre', 'Detalle del Instituto'))
         tr.bold = True; tr.font.size = Pt(18); tr.font.color.rgb = COLOR_NAVY
 
         # Historia
@@ -781,7 +819,7 @@ def reporte_casa_word(casa_id):
             _add_section_divider(doc)
             hp = doc.add_paragraph()
             hr = hp.add_run('  Reseña Histórica  ')
-            hr.bold = True; hr.font.size = Pt(12); hr.font.color.rgb = COLOR_WHITE
+            hr.bold = True; hr.font.size = Pt(12); hr.font.color.rgb = COLOR_NAVY
             hpPr = hp._p.get_or_add_pPr()
             shd = OxmlElement('w:shd')
             shd.set(qn('w:val'), 'clear')
@@ -847,7 +885,7 @@ def reporte_casa_word(casa_id):
         output = io.BytesIO()
         doc.save(output)
         output.seek(0)
-        filename = f"Reporte_{secure_filename(casa.get('nombre','Casa'))}.docx"
+        filename = f"Reporte_{secure_filename(casa.get('nombre','Instituto'))}.docx"
         return send_file(output,
                          mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                          as_attachment=True, download_name=filename)
@@ -891,7 +929,7 @@ def reporte_obra_word(casa_id, obra_id):
         # Sección: Información General
         sec1_p = doc.add_paragraph()
         sec1_r = sec1_p.add_run('  Información General  ')
-        sec1_r.bold = True; sec1_r.font.size = Pt(12); sec1_r.font.color.rgb = COLOR_WHITE
+        sec1_r.bold = True; sec1_r.font.size = Pt(12); sec1_r.font.color.rgb = COLOR_NAVY
         sp1 = sec1_p._p.get_or_add_pPr()
         shd1 = OxmlElement('w:shd')
         shd1.set(qn('w:val'), 'clear'); shd1.set(qn('w:color'), 'auto'); shd1.set(qn('w:fill'), 'F0F0F0')
@@ -921,7 +959,7 @@ def reporte_obra_word(casa_id, obra_id):
         # Sección: Contacto
         sec2_p = doc.add_paragraph()
         sec2_r = sec2_p.add_run('  Información de Contacto  ')
-        sec2_r.bold = True; sec2_r.font.size = Pt(12); sec2_r.font.color.rgb = COLOR_WHITE
+        sec2_r.bold = True; sec2_r.font.size = Pt(12); sec2_r.font.color.rgb = COLOR_NAVY
         sp2 = sec2_p._p.get_or_add_pPr()
         shd2 = OxmlElement('w:shd')
         shd2.set(qn('w:val'), 'clear'); shd2.set(qn('w:color'), 'auto'); shd2.set(qn('w:fill'), 'F0F0F0')

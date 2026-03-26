@@ -197,6 +197,7 @@ body {
 .brand-name {
   font-size: 1.1rem; font-weight: 800; color: var(--text);
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 
@@ -273,7 +274,12 @@ body {
   .user-btn:hover .user-avatar { transform: scale(1.1) rotate(5deg); }
 }
 
-.user-name { font-size: .88rem; font-weight: 700; color: var(--text); }
+.user-name { 
+  font-size: .88rem; font-weight: 700; color: var(--text); 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .chevron { color: var(--text-3); transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .user-btn[data-open] .chevron { transform: rotate(180deg); }
 
@@ -522,7 +528,24 @@ body.modal-open, html.modal-open {
   background: var(--surface);
 }
 .modal-header h2 { font-size: 1.3rem; font-weight: 800; color: var(--secondary); margin: 0; letter-spacing: -0.3px; }
-.modal-close { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; color: var(--text-2); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--text-2);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
 @media (hover: hover) {
   .modal-close:hover { background: var(--surface2); color: var(--danger); transform: rotate(90deg); }
 }
@@ -598,17 +621,7 @@ body.modal-open, html.modal-open {
 
 .modal-close {
   margin-left: auto;
-  background: transparent;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
 }
 @media (hover: hover) {
   .modal-close:hover {
@@ -779,6 +792,17 @@ body, .navbar, .modal, .user-dropdown,
 .contact-card-text { display: flex; flex-direction: column; }
 .contact-name { color: var(--text); font-weight: 700; font-size: 1.05rem; }
 .contact-phone { color: var(--text-2); font-size: 0.9rem; font-weight: 500; }
+
+/* ── Tablet Optimization (Intermediate space) ── */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .navbar { padding: 0 16px; }
+  .nav-brand { margin-right: 16px; padding: 6px 10px; gap: 8px; }
+  .brand-name { font-size: 1rem; }
+  .nav-links { gap: 4px; }
+  .nav-link { padding: 8px 12px; font-size: 0.9rem; }
+  .user-btn { padding: 4px 8px 4px 4px; gap: 6px; }
+  .user-name { max-width: 150px; font-size: 0.82rem; }
+}
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {

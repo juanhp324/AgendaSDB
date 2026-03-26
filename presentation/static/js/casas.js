@@ -22,7 +22,7 @@ async function cargarCasas(q = '') {
     grid.style.opacity = '1'; // Restore opacity
     if (!data.success) {
       grid.innerHTML = '<p class="empty-state">Error al cargar datos</p>';
-      showToast(data.message || 'Error al cargar casas', 'error');
+      showToast(data.message || 'Error al cargar institutos', 'error');
       return;
     }
     casasData = data.casas;
@@ -52,7 +52,7 @@ async function cargarCasas(q = '') {
 
 function renderCasas(casas) {
   const grid = document.getElementById('casasGrid');
-  if (!casas.length) { grid.innerHTML = '<p class="empty-state animate-fade-up">No se encontraron casas</p>'; return; }
+  if (!casas.length) { grid.innerHTML = '<p class="empty-state animate-fade-up">No se encontraron institutos</p>'; return; }
 
   const limitedCasas = casas.slice(0, 12);
   grid.innerHTML = limitedCasas.map((c, index) => {
@@ -155,7 +155,7 @@ function renderObrasDetalleGrid(obras, tipo = 'masculino') {
   if (!grid) return;
 
   if (!obras || obras.length === 0) {
-    grid.innerHTML = '<p class="empty-state animate-fade-up">No hay obras registradas para esta casa.</p>';
+    grid.innerHTML = '<p class="empty-state animate-fade-up">No hay obras registradas para este instituto.</p>';
     return;
   }
 
@@ -283,7 +283,7 @@ function abrirEdicionDesdeDetalle() {
 
 function openCasaModal(c = null) {
   document.getElementById('casa_id').value = c ? c._id : '';
-  document.getElementById('modalCasaTitle').textContent = c ? 'Editar' : 'Nueva';
+  document.getElementById('modalCasaTitle').textContent = c ? 'Editar Instituto' : 'Nuevo Instituto';
 
   document.getElementById('casa_nombre').value = c ? (c.nombre || '') : '';
   document.getElementById('casa_historia').value = c ? (c.historia || '') : '';
@@ -545,7 +545,7 @@ async function guardarCasa() {
   const historia = document.getElementById('casa_historia').value.trim();
 
   if (!nombre) {
-    showToast('El nombre de la Casa es obligatorio', 'warning');
+    showToast('El nombre del Instituto es obligatorio', 'warning');
     return;
   }
 
@@ -556,7 +556,7 @@ async function guardarCasa() {
     obras: tempObras
   };
 
-  showStatusModal('saving', id ? 'Actualizando casa...' : 'Creando nueva casa...');
+  showStatusModal('saving', id ? 'Actualizando instituto...' : 'Creando nuevo instituto...');
 
   const url = id ? `/update_casa/${id}` : '/create_casa';
   const method = id ? 'PUT' : 'POST';
@@ -589,10 +589,10 @@ async function eliminarCasa() {
   if (!id) return;
 
   showConfirmModal(
-    '¿Eliminar Casa Entrera?',
-    '¿Estás seguro de eliminar esta casa entera con todas sus obras? Esta acción es irreversible.',
+    '¿Eliminar Instituto?',
+    '¿Estás seguro de eliminar este instituto con todas sus obras? Esta acción es irreversible.',
     async () => {
-      showStatusModal('deleting', 'Eliminando registro de la casa...');
+      showStatusModal('deleting', 'Eliminando registro del instituto...');
       try {
         const res = await fetch(`/delete_casa/${id}`, { method: 'DELETE' });
         const data = await res.json();

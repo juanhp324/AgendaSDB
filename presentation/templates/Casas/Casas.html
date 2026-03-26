@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Casas Salesianas{% endblock %}
+{% block title %}Institutos{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/casas.css') }}"/>
 {% endblock %}
@@ -7,8 +7,8 @@
 
 <div class="page-header" data-aos="fade-down">
   <div>
-    <h1 class="page-title">Casas Salesianas</h1>
-    <p class="page-subtitle">Directorio de comunidades y obras salesianas</p>
+    <h1 class="page-title">Institutos</h1>
+    <p class="page-subtitle">Directorio de comunidades y obras</p>
   </div>
   <div class="header-actions">
     <a href="{{ url_for('RCasas.reporte_casas') }}" class="btn btn-secondary">
@@ -28,7 +28,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      Nueva Casa
+      Nuevo Instituto
     </button>
     {% endif %}
   </div>
@@ -40,7 +40,7 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar casas por nombre" oninput="buscarCasas()"/>
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar institutos por nombre" oninput="buscarCasas()"/>
     </div>
     
     <!-- Filtro de Género Custom Premium -->
@@ -142,7 +142,7 @@
       {% if session.get('rol') in ['admin','superadmin'] %}
       <button class="btn-premium-primary" id="btnIrAEditar" onclick="abrirEdicionDesdeDetalle()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Editar Casa
+        Editar Instituto
       </button>
       {% endif %}
       <button class="btn-premium-ghost" onclick="closeCasaDetalleModal()">Cerrar</button>
@@ -241,15 +241,15 @@
       <div class="modal-icon-container">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M9 21V9l3-3 3 3v12"/><path d="M2 21h4V12h3"/><path d="M15 12h3v9h4"/></svg>
       </div>
-      <h2 id="modalCasaTitle" class="modal-title-main">Nueva Casa Salesiana</h2>
+      <h2 id="modalCasaTitle" class="modal-title-main">Nuevo Instituto</h2>
       <button class="modal-close" onclick="closeCasaModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="casa_id"/>
       <div class="form-grid">
         <div class="form-group col-full">
-          <label>Nombre de la Casa *</label>
-          <input type="text" id="casa_nombre" class="form-input" placeholder="Ej: Casa Salesiana Don Bosco"/>
+          <label>Nombre*</label>
+          <input type="text" id="casa_nombre" class="form-input" placeholder="Ej: Instituto Salesiano Don Bosco"/>
         </div>
         <div class="form-group">
           <label>Género / Tipo *</label>
@@ -265,11 +265,11 @@
         </div>
         <div class="form-group col-full">
           <label>Historia</label>
-          <textarea id="casa_historia" class="form-input form-textarea" placeholder="Breve historia general de la casa..."></textarea>
+          <textarea id="casa_historia" class="form-input form-textarea" placeholder="Breve historia general del instituto..."></textarea>
         </div>
         
         <div class="form-group col-full" style="margin-top: 10px;">
-          <label class="form-section-label">Obras Vinculadas a esta Casa</label>
+          <label class="form-section-label">Obras Vinculadas</label>
           <div id="formObrasList" class="cards-grid-vertical" style="margin-bottom: 16px;"></div>
           <button type="button" class="btn-add-obra" onclick="openObraModal()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -282,7 +282,7 @@
       <button class="btn btn-ghost" onclick="closeCasaModal()">Cancelar</button>
       <div class="footer-actions">
         <button class="btn btn-danger" id="btnEliminarCasa" onclick="eliminarCasa()" style="display:none;">Eliminar</button>
-        <button class="btn btn-primary" onclick="guardarCasa()" id="btnGuardarCasa">Guardar Casa</button>
+        <button class="btn btn-primary" onclick="guardarCasa()" id="btnGuardarCasa">Guardar Instituto</button>
       </div>
     </div>
   </div>

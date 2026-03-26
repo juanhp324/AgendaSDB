@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Inicio — Agenda Salesiana{% endblock %}
+{% block title %}Inicio{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}"/>
 {% endblock %}
@@ -7,9 +7,9 @@
 
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-badge">Inspectoría Salesiana</div>
-    <h1 class="hero-title">Agenda de Casas Salesianas</h1>
-    <p class="hero-subtitle">Directorio oficial de las comunidades y obras salesianas. Encuentra información de contacto, historia y ubicación de cada casa.</p>
+    <div class="hero-badge">CÓNDOR, filial La Vega</div>
+    <h1 class="hero-title">Directorio</h1>
+    <p class="hero-subtitle">Directorio de las comunidades y obras</p>
     <div class="hero-actions">
       <a href="{{ url_for('RCasas.casas') }}" class="btn btn-primary btn-lg">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -25,7 +25,7 @@
       <div class="hero-stats">
         <div class="stat" id="statCasas">
           <span class="stat-number" id="totalCasas">—</span>
-          <span class="stat-label">Casas registradas</span>
+          <span class="stat-label">Institutos registrados</span>
         </div>
       </div>
     </div>

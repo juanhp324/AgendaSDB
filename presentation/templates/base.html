@@ -4,8 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{% block title %}Agenda Salesiana{% endblock %}</title>
-  <meta name="description" content="Directorio oficial de Casas Salesianas"/>
+  <title>{% block title %}Agenda CÓNDOR{% endblock %}</title>
+  <meta name="description" content="Directorio de CÓNDOR, filial La Vega"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
@@ -32,12 +32,12 @@
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     </div>
-    <span class="brand-name">Agenda Salesiana</span>
+    <span class="brand-name">Agenda CÓNDOR</span>
   </div>
 
   <div class="nav-links">
     <a href="{{ url_for('RInicio.inicio') }}" class="nav-link {% if active_page == 'inicio' %}active{% endif %}">Inicio</a>
-    <a href="{{ url_for('RCasas.casas') }}"  class="nav-link {% if active_page == 'casas'  %}active{% endif %}">Casas</a>
+    <a href="{{ url_for('RCasas.casas') }}"  class="nav-link {% if active_page == 'casas'  %}active{% endif %}">Institutos</a>
   </div>
 
   <!-- Theme Toggle -->
