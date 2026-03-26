@@ -75,10 +75,7 @@
         transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    .data-table tr:active {
-        transform: scale(0.98);
-        box-shadow: none;
-    }
+    /* .data-table tr:active handled by Anime.js */
     
     .data-table td {
         border: none;

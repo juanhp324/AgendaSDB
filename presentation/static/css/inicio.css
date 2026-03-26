@@ -1,8 +1,8 @@
 .hero {
   display: grid; grid-template-columns: 1.2fr 0.8fr; align-items: center;
-  gap: 80px; padding: 40px 0 100px; /* Increased bottom padding */
+  gap: 80px; padding: 40px 0 100px;
   position: relative;
-  /* Removed overflow: hidden to allow shadows to flow */
+  overflow: hidden; /* Added to contain decorative gradients and prevent horizontal scroll */
 }
 
 
@@ -45,7 +45,7 @@
   border: 1px solid var(--border);
   border-top: 6px solid var(--primary);
   position: relative; 
-  /* Removed overflow: hidden to prevent shadow clipping */
+  z-index: 10; /* Ensure it stays above background gradients */
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   animation: popInModal 0.8s cubic-bezier(1, 0, 0, 1) forwards;
 }
@@ -79,10 +79,29 @@
 
 
 @media (max-width: 768px) {
-  .hero { grid-template-columns: 1fr; }
-  .hero-visual { display: none; }
-  .hero-title { font-size: 2rem; }
-  .features { grid-template-columns: 1fr; }
+  .hero { 
+    grid-template-columns: 1fr; 
+    gap: 40px; 
+    padding: 20px 0 60px;
+    text-align: center;
+  }
+  .hero-visual { 
+    display: flex; 
+    order: 2;
+    padding: 20px 0;
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-card {
+    min-width: auto;
+    width: 100%;
+    max-width: 320px;
+    padding: 40px 30px;
+  }
+  .hero-title { font-size: 2.2rem; letter-spacing: -1px; }
+  .hero-subtitle { margin-inline: auto; font-size: 1.1rem; }
+  .hero-actions { justify-content: center; }
+  .features { grid-template-columns: 1fr; gap: 20px; }
 }
 
 /* ── DARK MODE OVERRIDES ── */

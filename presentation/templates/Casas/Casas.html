@@ -153,11 +153,13 @@
 <!-- MODAL DETALLE OBRA -->
 <div class="modal-overlay" id="obraDetalleModal">
   <div class="modal modal-lg">
-    <div class="modal-header">
-      <div class="modal-icon-container">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M9 17h6"/><path d="M4 17h1v4H4zm15 0h1v4h-1z"/><path d="M10 3h4v4h-4z"/></svg>
+    <div class="modal-header modal-header-compact">
+      <div class="modal-logo-circle">
+          <img src="/static/img/logo_sdb.png" alt="Logo">
       </div>
-      <h2 id="detalleObraNombre" class="modal-title-main">Detalle de Obra</h2>
+      <div class="modal-header-text-area">
+        <h2 id="detalleObraNombre" class="modal-title-premium">Detalle de Obra</h2>
+      </div>
       <button class="modal-close" onclick="closeObraDetalleModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -200,33 +202,34 @@
           </div>
         </div>
       </div>
+
+      <!-- Acciones de Reporte (Movidas aquí para optimizar espacio) -->
+      <div class="actions-section-premium">
+          <h4 class="actions-label">REPORTES Y DOCUMENTACIÓN</h4>
+          <div class="actions-grid-premium">
+              <a id="btnReporteObra" href="#" class="action-btn-premium">
+                <div class="action-icon-wrapper pdf">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span>Descargar PDF</span>
+              </a>
+              <a id="btnReporteObraWord" href="#" class="action-btn-premium">
+                <div class="action-icon-wrapper word">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <span>Descargar Word</span>
+              </a>
+          </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <div class="footer-left" style="display: flex; gap: 12px; margin-right: auto;">
-        <a id="btnReporteObra" href="#" class="btn btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-          </svg>
-          Reporte PDF
-        </a>
-        <a id="btnReporteObraWord" href="#" class="btn btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-          </svg>
-          Reporte Word
-        </a>
-      </div>
-      <div class="footer-right" style="display: flex; gap: 12px;">
-        <button class="btn btn-ghost" onclick="closeObraDetalleModal()">Cerrar</button>
-        {% if session.get('rol') in ['admin','superadmin'] %}
-        <button class="btn btn-primary" onclick="abrirEdicionObraDesdeDetalle()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 4px;">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Editar Obra
-        </button>
-        {% endif %}
-      </div>
+    <div class="modal-footer premium-footer">
+      {% if session.get('rol') in ['admin','superadmin'] %}
+      <button class="btn-premium-primary" onclick="abrirEdicionObraDesdeDetalle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar Obra
+      </button>
+      {% endif %}
+      <button class="btn-premium-ghost" onclick="closeObraDetalleModal()">Cerrar</button>
     </div>
   </div>
 </div>

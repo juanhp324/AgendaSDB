@@ -129,8 +129,17 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
-  margin: 0; /* Asegura que no haya márgenes que causen scroll extra */
+  margin: 0;
   position: relative;
+  overflow-x: hidden; /* Global prevention of horizontal scroll */
+  width: 100%;
+}
+
+.main-content {
+  position: relative;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: calc(100vh - var(--nav-h));
 }
 
 #particles-js-global {
@@ -314,7 +323,7 @@ body {
   font-weight: 600; font-size: 0.95rem; transition: all 0.2s;
   background: none; border: none; width: 100%; text-align: left; cursor: pointer;
 }
-.dropdown-item:active { background: var(--surface2); transform: scale(0.98); }
+/* .dropdown-item:active handled by Anime.js */
 @media (hover: hover) {
   .dropdown-item:hover {
     background: #f1f5f9;
@@ -341,7 +350,7 @@ body {
 }
 
 /* Base Hover effect for all buttons */
-.btn:active { transform: scale(0.96); }
+/* Handled by Anime.js on mobile */
 
 .btn-primary {
   background: var(--primary); color: #fff;
@@ -589,8 +598,8 @@ body.modal-open, html.modal-open {
 
 .modal-close {
   margin-left: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -603,9 +612,8 @@ body.modal-open, html.modal-open {
 }
 @media (hover: hover) {
   .modal-close:hover {
-    background: var(--danger);
-    color: #fff;
-    border-color: var(--danger);
+    background: rgba(220, 30, 70, 0.1);
+    color: var(--danger);
     transform: rotate(90deg) scale(1.1);
   }
 }

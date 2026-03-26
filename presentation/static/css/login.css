@@ -350,9 +350,7 @@
   }
 }
 
-.btn-submit:active {
-    transform: translateY(-2px) scale(0.98);
-}
+/* .btn-submit:active handled by Anime.js */
 
 .form-footer {
     margin-top: 24px;
