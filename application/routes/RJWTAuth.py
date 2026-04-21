@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from infrastructure.core.jwt_auth import jwt_required, role_required, blacklist_token
 from infrastructure.core.two_factor import TwoFactorAuth, TwoFactorSession, MAX_2FA_ATTEMPTS
+from infrastructure.core.encryption import get_encryption_manager
+from werkzeug.security import check_password_hash
+from infrastructure.core.safety import SecureLogger
 
 bp = Blueprint('RJWTAuth', __name__)
 
@@ -324,3 +327,135 @@ def admin_only_route():
         "message": "Acceso de administrador autorizado",
         "user": request.current_user
     }), 200
+
+# 2FA Management Endpoints
+@bp.route('/api/auth/setup-2fa', methods=['POST'])
+@jwt_required
+def setup_2fa():
+    """Setup 2FA for authenticated user - requires password verification"""
+    current_user = request.current_user
+    data = request.get_json(silent=True) or {}
+    
+    # P2.2 - Password verification required before setup
+    password = data.get('password')
+    if not password:
+        return jsonify({"success": False, "message": "Password required for 2FA setup"}), 400
+    
+    # Verify user password
+    user_data = MAuth.getUserById(current_user['user_id'])
+    if not user_data or not check_password_hash(user_data.get('password', ''), password):
+        SecureLogger.log_auth_attempt("2FA_SETUP_FAILED", user_data.get('email', 'unknown'), request.remote_addr)
+        return jsonify({"success": False, "message": "Invalid password"}), 401
+    
+    # Generate new secret
+    two_fa = TwoFactorAuth()
+    secret = two_fa.generate_secret()
+    qr_code = two_fa.generate_qr_code(user_data['email'], secret)
+    
+    # P1.4 - Encrypt secret before storing
+    encryption_manager = get_encryption_manager()
+    encrypted_secret = encryption_manager.encrypt(secret)
+    
+    # Store encrypted secret temporarily (not enabled yet)
+    MAuth.updateUsuario(current_user['user_id'], {
+        '2fa_secret': encrypted_secret,
+        '2fa_enabled': False  # Will be enabled after verification
+    })
+    
+    SecureLogger.log_auth_attempt("2FA_SETUP_INITIATED", user_data.get('email', 'unknown'), request.remote_addr)
+    
+    return jsonify({
+        "success": True,
+        "qr_code": qr_code,
+        "secret": secret,  # Only show once for backup
+        "message": "Scan QR code and verify with a code to enable 2FA"
+    })
+
+@bp.route('/api/auth/verify-2fa-setup', methods=['POST'])
+@jwt_required
+def verify_2fa_setup():
+    """Verify 2FA setup and enable it"""
+    current_user = request.current_user
+    data = request.get_json(silent=True) or {}
+    
+    user_data = MAuth.getUserById(current_user['user_id'])
+    if not user_data:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    
+    # Get and decrypt secret
+    encryption_manager = get_encryption_manager()
+    encrypted_secret = user_data.get('2fa_secret')
+    if not encrypted_secret:
+        return jsonify({"success": False, "message": "2FA not setup"}), 400
+    
+    try:
+        secret = encryption_manager.decrypt(encrypted_secret)
+    except Exception as e:
+        SecureLogger.safe_log(f"Error decrypting 2FA secret: {str(e)}", "ERROR")
+        return jsonify({"success": False, "message": "2FA setup error"}), 500
+    
+    # Verify the code
+    two_fa = TwoFactorAuth()
+    if not two_fa.verify_token(secret, data.get('code', '')):
+        return jsonify({"success": False, "message": "Invalid verification code"}), 400
+    
+    # Enable 2FA
+    MAuth.updateUsuario(current_user['user_id'], {'2fa_enabled': True})
+    
+    SecureLogger.log_auth_attempt("2FA_SETUP_COMPLETED", user_data.get('email', 'unknown'), request.remote_addr)
+    
+    return jsonify({
+        "success": True,
+        "message": "2FA enabled successfully"
+    })
+
+@bp.route('/api/auth/disable-2fa', methods=['POST'])
+@jwt_required
+def disable_2fa():
+    """Disable 2FA - requires password verification"""
+    current_user = request.current_user
+    data = request.get_json(silent=True) or {}
+    
+    # P1.1 - Password verification required before disable
+    password = data.get('password')
+    if not password:
+        return jsonify({"success": False, "message": "Password required to disable 2FA"}), 400
+    
+    # Verify user password
+    user_data = MAuth.getUserById(current_user['user_id'])
+    if not user_data or not check_password_hash(user_data.get('password', ''), password):
+        SecureLogger.log_auth_attempt("2FA_DISABLE_FAILED", user_data.get('email', 'unknown'), request.remote_addr)
+        return jsonify({"success": False, "message": "Invalid password"}), 401
+    
+    # Check if 2FA is enabled
+    if not user_data.get('2fa_enabled', False):
+        return jsonify({"success": False, "message": "2FA is not enabled"}), 400
+    
+    # Disable 2FA and remove secret
+    MAuth.updateUsuario(current_user['user_id'], {
+        '2fa_enabled': False,
+        '2fa_secret': None
+    })
+    
+    SecureLogger.log_auth_attempt("2FA_DISABLED", user_data.get('email', 'unknown'), request.remote_addr)
+    
+    return jsonify({
+        "success": True,
+        "message": "2FA disabled successfully"
+    })
+
+@bp.route('/api/auth/2fa-status', methods=['GET'])
+@jwt_required
+def get_2fa_status():
+    """Get current 2FA status"""
+    current_user = request.current_user
+    user_data = MAuth.getUserById(current_user['user_id'])
+    
+    if not user_data:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    
+    return jsonify({
+        "success": True,
+        "2fa_enabled": user_data.get('2fa_enabled', False),
+        "has_secret": bool(user_data.get('2fa_secret'))
+    })
