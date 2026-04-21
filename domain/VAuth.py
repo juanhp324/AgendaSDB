@@ -2,14 +2,14 @@ import infrastructure.model.MAuth as MAuth
 from flask import url_for, redirect, session, request, flash, jsonify, render_template
 from werkzeug.security import check_password_hash
 
-PUBLIC_ENDPOINTS = ['RAuth.show_login_form', 'RAuth.Login', 'RAuth.logout']
+PUBLIC_ENDPOINTS = ['RJWTAuth.show_login_form', 'RJWTAuth.login', 'RJWTAuth.logout']
 PROTECTED_ENDPOINTS = [
     'RInicio.inicio',
     'RCasas.casas', 'RCasas.get_casas', 'RCasas.get_casa',
     'RCasas.create_casa', 'RCasas.update_casa', 'RCasas.delete_casa',
     'RUsuarios.usuarios', 'RUsuarios.get_usuarios', 'RUsuarios.update_usuario',
     'RUsuarios.delete_usuario', 'RUsuarios.create_usuario',
-    'RAuth.update_perfil', 'RAuth.get_perfil',
+    'RJWTAuth.update_profile_jwt', 'RJWTAuth.get_current_user',
 ]
 
 from infrastructure.core.safety import ServiceUnavailableError
@@ -43,7 +43,7 @@ class AppGateway:
             
         # 2. Verificar Autenticación (JWT o Sesión)
         if 'user_id' not in session:
-            return redirect(url_for('RAuth.show_login_form'))
+            return redirect(url_for('RJWTAuth.show_login_form'))
         
         # 3. Verificar si el usuario aún existe y está activo
         try:
@@ -54,14 +54,14 @@ class AppGateway:
                 if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({"success": False, "message": msg}), 401
                 flash(msg, "danger")
-                return redirect(url_for('RAuth.show_login_form'))
+                return redirect(url_for('RJWTAuth.show_login_form'))
         except ServiceUnavailableError as e:
             return self.handle_service_unavailable(e)
 
     def index(self):
         if 'user_id' in session:
             return redirect(url_for('RInicio.inicio'))
-        return redirect(url_for('RAuth.show_login_form'))
+        return redirect(url_for('RJWTAuth.show_login_form'))
 
 
 class loginValidator:

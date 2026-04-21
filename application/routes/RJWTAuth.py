@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash, current_app
 import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from infrastructure.core.jwt_auth import jwt_required, role_required, blacklist_token
@@ -118,6 +118,13 @@ def login():
         response.set_cookie('refresh_token', tokens['refresh_token'], httponly=True, secure=True)
         
         return response
+    
+@bp.route('/logout')
+def logout():
+    """Cerrar sesión para entorno web"""
+    session.clear()
+    flash("Has cerrado sesión.", "info")
+    return redirect(url_for('RJWTAuth.show_login_form'))
 
 @bp.route('/api/auth/login', methods=['POST'])
 def jwt_login():
@@ -183,6 +190,59 @@ def jwt_login():
         },
         **tokens
     }), 200
+
+
+def verify_2fa(data):
+    """Verificar 2FA para flujo web"""
+    temp_token = data.get('temp_token')
+    token_2fa = data.get('2fa_token')
+    
+    if not temp_token or not token_2fa:
+        return render_template('Auth/Login.html', error="Datos de 2FA incompletos.")
+        
+    import jwt
+    try:
+        # Use current_app.secret_key safely
+        payload = jwt.decode(temp_token, current_app.secret_key, algorithms=['HS256'])
+        if payload.get('type') != 'temp_2fa':
+            return render_template('Auth/Login.html', error="Token 2FA inválido.")
+    except jwt.InvalidTokenError:
+        return render_template('Auth/Login.html', error="Token 2FA expirado o inválido.")
+        
+    user_id = payload['user_id']
+    user = MAuth.getUserById(user_id)
+    
+    if not user:
+        return render_template('Auth/Login.html', error="Usuario no encontrado.")
+        
+    two_fa = TwoFactorAuth()
+    # Decrypt secret before verifying
+    from infrastructure.core.encryption import get_encryption_manager
+    encryption_manager = get_encryption_manager()
+    
+    try:
+        encrypted_secret = user.get('2fa_secret')
+        if not encrypted_secret:
+             return render_template('Auth/Login.html', error="2FA no está configurado para este usuario.")
+        secret = encryption_manager.decrypt(encrypted_secret)
+    except Exception:
+        return render_template('Auth/Login.html', error="Error al procesar la seguridad 2FA.")
+
+    if two_fa.verify_token(secret, token_2fa):
+        # Complete login using session management
+        TwoFactorSession.complete_2fa_login(session, user)
+        return redirect(url_for('RInicio.inicio'))
+    else:
+        # Increment attempts and check for lockout
+        attempts = TwoFactorSession.increment_2fa_attempts(session)
+        if attempts >= MAX_2FA_ATTEMPTS:
+            TwoFactorSession.clear_2fa_pending(session)
+            return render_template('Auth/Login.html', error="Demasiados intentos fallidos de 2FA. Inicia sesión de nuevo.")
+            
+        return render_template('Auth/2FA.html', 
+                             temp_token=temp_token, 
+                             email=user.get('email'), 
+                             error=f"Código 2FA incorrecto. Intento {attempts}/{MAX_2FA_ATTEMPTS}")
 
 def verify_jwt_2fa(data):
     """Verify 2FA token for JWT login"""
