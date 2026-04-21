@@ -128,18 +128,23 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Setup 2FA with correct password
         setup_data = {
             'password': 'testpassword123'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -157,22 +162,27 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Try to setup 2FA with wrong password
         setup_data = {
             'password': 'wrongpassword'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 401
         data = json.loads(response.data)
-        assert 'contraseña incorrecta' in data['message'].lower()
+        assert 'Invalid password' in data['message']
     
     def test_2fa_setup_without_password(self, client, test_user):
         """Test 2FA setup without password"""
@@ -182,18 +192,23 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Try to setup 2FA without password
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps({}),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 400
         data = json.loads(response.data)
-        assert 'contraseña' in data['message'].lower()
+        assert 'Password required' in data['message']
     
     def test_2fa_setup_not_logged_in(self, client):
         """Test 2FA setup when not logged in"""
@@ -201,13 +216,13 @@ class TestTwoFactorAuthRoutes:
             'password': 'somepassword'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
                              content_type='application/json')
         
         assert response.status_code == 401
         data = json.loads(response.data)
-        assert 'no autenticado' in data['message'].lower()
+        assert 'Unauthorized' in data['message']
     
     def test_2fa_enable_with_valid_token(self, client, test_user):
         """Test enabling 2FA with valid token"""
@@ -217,18 +232,23 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Setup 2FA first
         setup_data = {
             'password': 'testpassword123'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         setup_result = json.loads(response.data)
         secret = setup_result['secret']
@@ -239,17 +259,18 @@ class TestTwoFactorAuthRoutes:
         
         # Enable 2FA
         enable_data = {
-            'token': valid_token
+            'code': valid_token
         }
         
-        response = client.post('/enable_2fa',
+        response = client.post('/api/auth/verify-2fa-setup',
                              data=json.dumps(enable_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'habilitada' in data['message'].lower()
+        assert 'enabled successfully' in data['message']
     
     def test_2fa_enable_with_invalid_token(self, client, test_user):
         """Test enabling 2FA with invalid token"""
@@ -259,31 +280,37 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Setup 2FA first
         setup_data = {
             'password': 'testpassword123'
         }
         
-        client.post('/setup_2fa',
+        client.post('/api/auth/setup-2fa',
                    data=json.dumps(setup_data),
-                   content_type='application/json')
+                   content_type='application/json',
+                   headers={'Authorization': f'Bearer {token}'})
         
         # Try to enable 2FA with invalid token
         enable_data = {
-            'token': '000000'
+            'code': '000000'
         }
         
-        response = client.post('/enable_2fa',
+        response = client.post('/api/auth/verify-2fa-setup',
                              data=json.dumps(enable_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
-        assert response.status_code == 401
+        assert response.status_code == 400
         data = json.loads(response.data)
-        assert 'inválido' in data['message'].lower()
+        assert 'Invalid verification code' in data['message']
     
     def test_2fa_disable_with_valid_password(self, client, test_user):
         """Test disabling 2FA with valid password"""
@@ -293,23 +320,28 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Disable 2FA with correct password
         disable_data = {
             'password': 'testpassword123'
         }
         
-        response = client.post('/disable_2fa',
+        response = client.post('/api/auth/disable-2fa',
                              data=json.dumps(disable_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'deshabilitada' in data['message'].lower()
+        assert 'disabled successfully' in data['message']
     
     def test_2fa_disable_with_invalid_password(self, client, test_user):
         """Test disabling 2FA with invalid password"""
@@ -319,22 +351,27 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Try to disable 2FA with wrong password
         disable_data = {
             'password': 'wrongpassword'
         }
         
-        response = client.post('/disable_2fa',
+        response = client.post('/api/auth/disable-2fa',
                              data=json.dumps(disable_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 401
         data = json.loads(response.data)
-        assert 'contraseña incorrecta' in data['message'].lower()
+        assert 'Invalid password' in data['message']
     
     def test_2fa_status_check(self, client, test_user):
         """Test 2FA status check"""
@@ -344,19 +381,25 @@ class TestTwoFactorAuthRoutes:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Check 2FA status
-        response = client.get('/2fa_status')
+        response = client.get('/api/auth/2fa-status',
+                            headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert 'enabled' in data
-        assert 'configured' in data
-        assert isinstance(data['enabled'], bool)
-        assert isinstance(data['configured'], bool)
+        assert data['success'] is True
+        assert '2fa_enabled' in data
+        assert 'has_secret' in data
+        assert isinstance(data['2fa_enabled'], bool)
+        assert isinstance(data['has_secret'], bool)
 
 class TestTwoFactorAuthSecurity:
     """Test 2FA Security Features"""
@@ -370,17 +413,22 @@ class TestTwoFactorAuthSecurity:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         setup_data = {
             'password': 'testpassword123'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -398,31 +446,37 @@ class TestTwoFactorAuthSecurity:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Setup 2FA first
         setup_data = {
             'password': 'testpassword123'
         }
         
-        response = client.post('/setup_2fa',
+        response = client.post('/api/auth/setup-2fa',
                              data=json.dumps(setup_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         # Try multiple invalid 2FA attempts
         for i in range(4):  # Assuming max attempts is 3
             enable_data = {
-                'token': '000000'
+                'code': '000000'
             }
             
-            response = client.post('/enable_2fa',
+            response = client.post('/api/auth/verify-2fa-setup',
                                  data=json.dumps(enable_data),
-                                 content_type='application/json')
+                                 content_type='application/json',
+                                 headers={'Authorization': f'Bearer {token}'})
         
         # Should be rate limited after too many attempts
-        assert response.status_code in [401, 429]
+        assert response.status_code in [400, 429]
     
     def test_2fa_session_cleanup(self, client, test_user):
         """Test 2FA session cleanup on logout"""
@@ -432,24 +486,32 @@ class TestTwoFactorAuthSecurity:
             'password': 'testpassword123'
         }
         
-        client.post('/Login',
-                   data=json.dumps(login_data),
-                   content_type='application/json')
+        response = client.post('/Login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        # Get token from login response
+        login_result = json.loads(response.data)
+        token = login_result.get('access_token')
         
         # Setup 2FA
         setup_data = {
             'password': 'testpassword123'
         }
         
-        client.post('/setup_2fa',
+        client.post('/api/auth/setup-2fa',
                    data=json.dumps(setup_data),
-                   content_type='application/json')
+                   content_type='application/json',
+                   headers={'Authorization': f'Bearer {token}'})
         
-        # Logout
-        client.get('/Logout')
+        # Logout (revoke token)
+        response = client.post('/api/auth/logout',
+                             content_type='application/json',
+                             headers={'Authorization': f'Bearer {token}'})
         
         # Try to access 2FA endpoints after logout
-        response = client.get('/2fa_status')
+        response = client.get('/api/auth/2fa-status',
+                            headers={'Authorization': f'Bearer {token}'})
         
-        # Should be redirected or require login
-        assert response.status_code in [302, 401]
+        # Should be unauthorized
+        assert response.status_code == 401
