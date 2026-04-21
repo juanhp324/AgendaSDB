@@ -1,31 +1,34 @@
 <div align="center">
   <img src="presentation/static/img/logo_sdbfondo.jpeg" alt="Logo Salesianos" width="120" />
-  <h1>Agenda Salesiana SDB 🏛️</h1>
+  <h1>Agenda Salesiana SDB</h1>
   <p><em>Sistema de Gestión Institucional para la Inspectoría de las Antillas (República Dominicana)</em></p>
 
-  [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+  [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
   [![Flask](https://img.shields.io/badge/Flask-3.x-lightgrey.svg?style=flat-square&logo=flask)](https://flask.palletsprojects.com/)
   [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248.svg?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+  [![Redis](https://img.shields.io/badge/Redis-DC382D.svg?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+  [![Security](https://img.shields.io/badge/Security-Enterprise_Grade-00C851.svg?style=flat-square&logo=security)]()
   [![UI](https://img.shields.io/badge/UI-Premium_Glassmorphism-FF6B6B.svg?style=flat-square)]()
 </div>
 
 ---
 
-## 📖 Sobre el Proyecto
+## Sobre el Proyecto
 
-**AgendaSDB** es una plataforma web moderna y altamente optimizada para organizar, consultar y gestionar la red de Obras y Casas Salesianas. El sistema cuenta con una interfaz de diseño premium, transiciones fluidas y soporte nativo para **Modo Claro / Modo Oscuro**.
+**AgendaSDB** es una plataforma web moderna y altamente optimizada para organizar, consultar y gestionar la red de Obras y Casas Salesianas. El sistema cuenta con una interfaz de diseño premium, transiciones fluidas, soporte nativo para **Modo Claro / Modo Oscuro**, y **seguridad de grado empresarial**.
 
-## ✨ Características Principales
+## Características Principales
 
-- 🏢 **Gestión de Casas y Obras**: Registro estructurado de sedes (Casas) y sus centros asociados (Obras: parroquias, colegios, etc.).
-- 🔐 **Sistema de Roles (RBAC)**: Gestión de permisos para `Superadmin`, `Admin` y `User`.
-- 📄 **Reportes Automatizados**: 
+- **Gestión de Casas y Obras**: Registro estructurado de sedes (Casas) y sus centros asociados (Obras: parroquias, colegios, etc.).
+- **Sistema de Roles (RBAC)**: Gestión de permisos para `Superadmin`, `Admin` y `User`.
+- **Reportes Automatizados**: 
   - Generación de **PDF** de alta calidad con `fpdf2`.
   - Generación de documentos **Word (.docx)** profesionales con `python-docx`.
-- 🎨 **Interfaz Premium & Dark Mode**: Diseño basado en *Glassmorphism* con animaciones orgánicas y adaptabilidad total al tema del sistema.
-- 🛡️ **Resiliencia & Seguridad**: Protecciones avanzadas contra fallos y ataques (ver sección de Resiliencia).
+- **Interfaz Premium & Dark Mode**: Diseño basado en *Glassmorphism* con animaciones orgánicas y adaptabilidad total al tema del sistema.
+- **Seguridad Enterprise**: JWT authentication, 2FA, rate limiting, headers de seguridad.
+- **Resiliencia & Monitoreo**: Protecciones avanzadas contra fallos con Sentry integrado.
 
-## 🛡️ Resiliencia y Seguridad
+## Resiliencia y Seguridad
 
 El sistema implementa patrones de diseño modernos para garantizar la disponibilidad y protección de los datos:
 
@@ -34,9 +37,9 @@ El sistema implementa patrones de diseño modernos para garantizar la disponibil
 *   **Rate Limiting**: Protección contra ataques de fuerza bruta en el inicio de sesión mediante limitación de peticiones por IP.
 *   **Custom CSRF Protection**: Implementación a medida de protección contra ataques *Cross-Site Request Forgery* para todas las operaciones de modificación de estado.
 
-## 🛠️ Tecnologías Core
+## Tecnologías Core
 
-*   **Backend**: Python 3.10+, Flask 3.0.
+*   **Backend**: Python 3.11+, Flask 3.0.
 *   **Base de Datos**: MongoDB (PyMongo), MongoDB Atlas.
 *   **Arquitectura**: Clean Architecture (Application, Domain, Infrastructure, Presentation).
 *   **Frontend**: CSS3 Vanilla (Variables CSS), HTML5 Semántico, JS Moderno.
