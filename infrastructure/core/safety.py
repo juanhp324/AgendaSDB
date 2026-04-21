@@ -1,7 +1,31 @@
 import time
 import secrets
+import logging
 from functools import wraps
 from flask import request, jsonify, session, abort
+
+# Configure secure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class SecureLogger:
+    """Secure logger that filters out sensitive information"""
+    
+    @staticmethod
+    def safe_log(message, level='info'):
+        """Log message without sensitive data"""
+        safe_message = SecureLogger._sanitize_message(message)
+        getattr(logger, level)(safe_message)
+    
+    @staticmethod
+    def _sanitize_message(message):
+        """Remove potential sensitive information from log messages"""
+        import re
+        # Remove potential passwords, tokens, keys
+        sanitized = re.sub(r'(?i)(password|token|key|secret)[=:]\s*[^\s\}]+', r'\1=***REDACTED***', str(message))
+        # Remove MongoDB connection strings
+        sanitized = re.sub(r'mongodb\+?://[^\s\}]+', 'mongodb://***REDACTED***', sanitized)
+        return sanitized
 
 class RateLimiter:
     """
@@ -59,25 +83,25 @@ class CircuitBreaker:
             if self.state == "OPEN":
                 if now - self.last_failure_time > self.recovery_timeout:
                     self.state = "HALF_OPEN"
-                    print(f"[CIRCUIT BREAKER] Intentando recuperación (HALF_OPEN) para {f.__name__}")
+                    SecureLogger.safe_log(f"[CIRCUIT BREAKER] Intentando recuperación (HALF_OPEN) para {f.__name__}")
                 else:
                     return self._fallback()
 
             try:
                 result = f(*args, **kwargs)
                 if self.state == "HALF_OPEN":
-                    print(f"[CIRCUIT BREAKER] Circuito CERRADO (Éxito en recuperación) para {f.__name__}")
+                    SecureLogger.safe_log(f"[CIRCUIT BREAKER] Circuito CERRADO (Éxito en recuperación) para {f.__name__}")
                     self.failures = 0
                     self.state = "CLOSED"
                 return result
             except Exception as e:
                 self.failures += 1
                 self.last_failure_time = now
-                print(f"[CIRCUIT BREAKER] Fallo #{self.failures} en {f.__name__}: {e}")
+                SecureLogger.safe_log(f"[CIRCUIT BREAKER] Fallo #{self.failures} en {f.__name__}: {str(e)}")
                 
                 if self.failures >= self.failure_threshold:
                     self.state = "OPEN"
-                    print(f"[CIRCUIT BREAKER] Circuito ABIERTO para {f.__name__}. Bloqueando llamadas.")
+                    SecureLogger.safe_log(f"[CIRCUIT BREAKER] Circuito ABIERTO para {f.__name__}. Bloqueando llamadas.")
                 
                 raise e
 

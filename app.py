@@ -1,15 +1,32 @@
 import os
 from datetime import timedelta
-from flask import Flask, redirect, url_for, session, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__, template_folder='presentation/templates', static_folder='presentation/static')
-app.secret_key = os.getenv('SECRET_KEY', 'agenda_secret_key_2024')
-if app.secret_key == 'agenda_secret_key_2024':
-    print("[WARNING] SECRET_KEY no definida en .env. Usando clave por defecto (Inseguro para producción).")
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key or secret_key == 'agenda_secret_key_2024':
+    raise ValueError(
+        "SECRET_KEY no configurada o usando valor por defecto inseguro. "
+        "Por favor, establece una SECRET_KEY segura en tu archivo .env. "
+        "Puedes generar una con: python -c 'import secrets; print(secrets.token_hex(32))'"
+    )
+app.secret_key = secret_key
 app.permanent_session_lifetime = timedelta(days=30)
+
+# Initialize Sentry monitoring
+from infrastructure.monitoring.sentry_config import init_sentry
+sentry_monitor = init_sentry(app)
+
+# Initialize security headers
+from infrastructure.core.security_headers import init_security_headers
+init_security_headers(app)
+
+# Initialize JWT authentication
+from infrastructure.core.jwt_auth import init_jwt_auth
+jwt_auth = init_jwt_auth(app)
 
 # Importar blueprints
 from application.routes.RAuth import bp as RAuth_bp
@@ -27,14 +44,19 @@ app.register_blueprint(RInicio_bp)
 app.register_blueprint(RCasas_bp)
 app.register_blueprint(RUsuarios_bp)
 
+# Register JWT authentication blueprint
+from application.routes.RJWTAuth import bp as RJWTAuth_bp
+app.register_blueprint(RJWTAuth_bp)
+
 # Iniciar Pasarela de Aplicación
 AppGateway(app)
 
 # --- SEGURIDAD GLOBAL (Rate Limit & CSRF) ---
-from infrastructure.core.safety import CSRFProtector, RateLimiter
+from infrastructure.core.safety import CSRFProtector
+from infrastructure.core.redis_rate_limiter import get_rate_limiter
 from flask import abort
 
-login_limiter = RateLimiter(requests=5, window=60)
+login_limiter = get_rate_limiter(requests=5, window=60)
 
 @app.context_processor
 def inject_csrf_token():
@@ -60,4 +82,4 @@ def global_security_check():
             abort(403, description="Token CSRF inválido o ausente.")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
