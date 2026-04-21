@@ -32,6 +32,7 @@ jwt_auth = init_jwt_auth(app)
 from application.routes.RInicio import bp as RInicio_bp
 from application.routes.RCasas import bp as RCasas_bp
 from application.routes.RUsuarios import bp as RUsuarios_bp
+from domain.VAuth import AppGateway
 
 # Register JWT authentication blueprint
 from application.routes.RJWTAuth import bp as RJWTAuth_bp
