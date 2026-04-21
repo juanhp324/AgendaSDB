@@ -44,7 +44,7 @@ class JWTAuth:
             'rol': user_data.get('rol', 'user'),
             'nombre': user_data.get('nombre', 'Usuario'),
             'iat': now,
-            'exp': now + datetime.timedelta(hours=1),  # 1 hour expiration
+            'exp': now + datetime.timedelta(minutes=15),  # 15 minutes expiration
             'type': 'access'
         }
         
@@ -65,7 +65,7 @@ class JWTAuth:
             'access_token': access_token,
             'refresh_token': refresh_token,
             'token_type': 'Bearer',
-            'expires_in': 3600  # 1 hour in seconds
+            'expires_in': 900  # 15 minutes in seconds
         }
     
     def verify_token(self, token, token_type='access'):
@@ -195,16 +195,32 @@ def role_required(*required_roles):
         return decorated_function
     return decorator
 
-# JWT token blacklist (for production, use Redis/database)
-token_blacklist = set()
+# JWT token blacklist using Redis
+import os
+from infrastructure.core.redis_rate_limiter import get_rate_limiter
 
 def is_token_blacklisted(token):
-    """Check if token is blacklisted"""
-    return token in token_blacklist
+    """Check if token is blacklisted in Redis"""
+    try:
+        # Use Redis rate limiter connection for blacklist
+        redis_client = get_rate_limiter().redis_client
+        return redis_client.exists(f"blacklist:{token}")
+    except Exception:
+        # Fallback to memory if Redis fails
+        return token in getattr(is_token_blacklisted, '_memory_fallback', set())
 
 def blacklist_token(token):
-    """Add token to blacklist"""
-    token_blacklist.add(token)
+    """Add token to Redis blacklist with TTL"""
+    try:
+        # Use Redis rate limiter connection for blacklist
+        redis_client = get_rate_limiter().redis_client
+        # Blacklist token for 24 hours (same as access token expiration)
+        redis_client.setex(f"blacklist:{token}", 86400, "1")
+    except Exception:
+        # Fallback to memory if Redis fails
+        if not hasattr(is_token_blacklisted, '_memory_fallback'):
+            is_token_blacklisted._memory_fallback = set()
+        is_token_blacklisted._memory_fallback.add(token)
 
 # Initialize JWT auth instance
 jwt_auth = JWTAuth()

@@ -89,6 +89,34 @@ function removeSession(email) {
     renderSessions();
 }
 
+// Validación de email
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Validación de contraseña
+function validatePassword(password) {
+    return password.length >= 6; // Mínimo 6 caracteres
+}
+
+// Mostrar error de validación
+function showValidationError(message) {
+    const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+    }
+}
+
+// Limpiar mensajes de error
+function clearValidationErrors() {
+    const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+    }
+}
+
 async function handleLogin(e) {
     e.preventDefault();
     const btn = document.querySelector('.btn-submit');
@@ -98,10 +126,35 @@ async function handleLogin(e) {
     const remember = document.querySelector('input[name="remember"]').checked;
 
     if (btn) btn.disabled = true;
-    errorMsg.style.display = 'none';
+    clearValidationErrors();
 
-    let email = emailInput.value;
+    let email = emailInput.value.trim();
     let password = passInput.value;
+
+    // Validación de frontend
+    if (!email) {
+        showValidationError('El correo electrónico es obligatorio');
+        if (btn) btn.disabled = false;
+        return;
+    }
+
+    if (!validateEmail(email)) {
+        showValidationError('Por favor, ingresa un correo electrónico válido');
+        if (btn) btn.disabled = false;
+        return;
+    }
+
+    if (!password) {
+        showValidationError('La contraseña es obligatoria');
+        if (btn) btn.disabled = false;
+        return;
+    }
+
+    if (!validatePassword(password)) {
+        showValidationError('La contraseña debe tener al menos 6 caracteres');
+        if (btn) btn.disabled = false;
+        return;
+    }
 
     // SEGURIDAD: Si el valor es el obfuscado, lo de-obfuscamos solo antes de enviar
     if (passInput.dataset.isObfuscated === "true") {

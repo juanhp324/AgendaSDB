@@ -3,7 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 .venv/
+
+# Environment files
 .env
+.env.local
+.env.production
+.env.staging
+.env.development
 
 # IDEs
 .vscode/
@@ -16,3 +22,16 @@ Thumbs.db
 # Project specific
 presentation/static/uploads/logos/*
 !presentation/static/uploads/logos/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite3

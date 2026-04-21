@@ -13,3 +13,7 @@ services:
         value: AgendaSDB
       - key: SECRET_KEY
         generateValue: true
+      - key: REDIS_URL
+        sync: false
+      - key: FLASK_ENV
+        value: production

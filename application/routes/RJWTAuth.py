@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from infrastructure.core.jwt_auth import jwt_required, role_required, blacklist_token
@@ -6,9 +6,127 @@ from infrastructure.core.two_factor import TwoFactorAuth, TwoFactorSession, MAX_
 
 bp = Blueprint('RJWTAuth', __name__)
 
+@bp.route('/Login', methods=['GET'])
+def show_login_form():
+    """Mostrar formulario de login"""
+    return render_template('Auth/Login.html')
+
+@bp.route('/Login', methods=['POST'])
+def login():
+    """Login endpoint - maneja tanto formularios web como JSON"""
+    # Rate limiting
+    from infrastructure.core.redis_rate_limiter import get_rate_limiter
+    limiter = get_rate_limiter(requests=5, window=60)  # 5 requests per minute
+    
+    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+    if not limiter.is_allowed(client_ip):
+        if request.is_json:
+            return jsonify({"message": "Too many login attempts. Please try again later."}), 429
+        else:
+            return render_template('Auth/Login.html', error="Demasiados intentos. Espera un momento.")
+    
+    # Obtener datos según el tipo de request
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+    else:
+        data = {
+            'email': request.form.get('email', ''),
+            'password': request.form.get('password', ''),
+            'remember': request.form.get('remember') == 'on'
+        }
+    
+    # Check if this is 2FA verification
+    if data and data.get('2fa_token') and data.get('temp_token'):
+        return verify_2fa(data)
+    
+    # Regular login flow
+    login = VAuth.loginValidator(is_json=request.is_json, payLoad=data)
+    try:
+        userData = login.validation()
+    except ValueError as exc:
+        if request.is_json:
+            return jsonify({"message": str(exc)}), 400
+        else:
+            return render_template('Auth/Login.html', error=str(exc))
+    except LookupError as exc:
+        if request.is_json:
+            return jsonify({"message": str(exc)}), 404
+        else:
+            return render_template('Auth/Login.html', error=str(exc))
+    except PermissionError as exc:
+        if request.is_json:
+            return jsonify({"message": str(exc)}), 401
+        else:
+            return render_template('Auth/Login.html', error=str(exc))
+
+    # Check if user has 2FA enabled
+    if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
+        # Generate temporary token for 2FA verification
+        import jwt
+        from flask import current_app
+        temp_token = jwt.encode(
+            {
+                'user_id': str(userData['_id']),
+                'type': 'temp_2fa',
+                'exp': jwt.datetime.datetime.utcnow() + jwt.datetime.timedelta(minutes=5)
+            },
+            current_app.secret_key,
+            algorithm='HS256'
+        )
+        
+        # Set 2FA pending state
+        TwoFactorSession.set_2fa_pending(request.session, userData)
+        
+        if request.is_json:
+            return jsonify({
+                "success": True,
+                "requires_2fa": True,
+                "temp_token": temp_token,
+                "message": "Se requiere verificación de dos factores"
+            })
+        else:
+            # Para formulario web, mostrar página de 2FA
+            return render_template('Auth/2FA.html', temp_token=temp_token, email=data.get('email'))
+    
+    # Generate JWT tokens
+    from infrastructure.core.jwt_auth import JWTAuth
+    jwt_auth = JWTAuth()
+    tokens = jwt_auth.generate_tokens(userData)
+    
+    if request.is_json:
+        return jsonify({
+            "success": True,
+            "access_token": tokens['access_token'],
+            "refresh_token": tokens['refresh_token'],
+            "token_type": "Bearer",
+            "expires_in": tokens['expires_in'],
+            "user_info": {
+                "nombre": userData.get("nombre", "Usuario"),
+                "avatar": userData.get("avatar", ""),
+                "email": userData.get("email", "")
+            }
+        })
+    else:
+        # Para formulario web, guardar tokens y redirigir
+        response = redirect('/dashboard' if userData.get('rol') == 'admin' else '/profile')
+        
+        # Set JWT tokens as cookies for web
+        response.set_cookie('access_token', tokens['access_token'], httponly=True, secure=True)
+        response.set_cookie('refresh_token', tokens['refresh_token'], httponly=True, secure=True)
+        
+        return response
+
 @bp.route('/api/auth/login', methods=['POST'])
 def jwt_login():
     """JWT login endpoint"""
+    # Rate limiting for login endpoint
+    from infrastructure.core.redis_rate_limiter import get_rate_limiter
+    limiter = get_rate_limiter(requests=5, window=60)  # 5 requests per minute
+    
+    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+    if not limiter.is_allowed(client_ip):
+        return jsonify({"message": "Too many login attempts. Please try again later."}), 429
+    
     data = request.get_json(silent=True)
     
     # Check if this is 2FA verification
@@ -109,6 +227,14 @@ def verify_jwt_2fa(data):
 @bp.route('/api/auth/refresh', methods=['POST'])
 def refresh_token():
     """Refresh access token using refresh token"""
+    # Rate limiting for refresh token endpoint
+    from infrastructure.core.redis_rate_limiter import get_rate_limiter
+    limiter = get_rate_limiter(requests=10, window=60)  # 10 requests per minute
+    
+    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+    if not limiter.is_allowed(client_ip):
+        return jsonify({"message": "Too many refresh attempts. Please try again later."}), 429
+    
     data = request.get_json(silent=True)
     refresh_token = data.get('refresh_token') if data else None
     

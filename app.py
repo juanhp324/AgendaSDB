@@ -28,25 +28,19 @@ init_security_headers(app)
 from infrastructure.core.jwt_auth import init_jwt_auth
 jwt_auth = init_jwt_auth(app)
 
-# Importar blueprints
-from application.routes.RAuth import bp as RAuth_bp
+# Importar blueprints (solo JWT authentication)
 from application.routes.RInicio import bp as RInicio_bp
-
 from application.routes.RCasas import bp as RCasas_bp
 from application.routes.RUsuarios import bp as RUsuarios_bp
-
-# Importar Pasarela de Aplicación (API Gateway)
-from domain.VAuth import AppGateway
-
-# Registrar blueprints
-app.register_blueprint(RAuth_bp)
-app.register_blueprint(RInicio_bp)
-app.register_blueprint(RCasas_bp)
-app.register_blueprint(RUsuarios_bp)
 
 # Register JWT authentication blueprint
 from application.routes.RJWTAuth import bp as RJWTAuth_bp
 app.register_blueprint(RJWTAuth_bp)
+
+# Registrar blueprints
+app.register_blueprint(RInicio_bp)
+app.register_blueprint(RCasas_bp)
+app.register_blueprint(RUsuarios_bp)
 
 # Iniciar Pasarela de Aplicación
 AppGateway(app)

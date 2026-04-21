@@ -19,19 +19,38 @@ class SecurityHeaders:
     @staticmethod
     def _add_security_headers(response):
         """Add security headers to HTTP responses"""
-        # Content Security Policy (CSP)
-        csp_directives = [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Allow inline scripts for legacy compatibility
-            "style-src 'self' 'unsafe-inline'",  # Allow inline styles
-            "img-src 'self' data: https:",
-            "font-src 'self' data:",
-            "connect-src 'self'",
-            "frame-ancestors 'none'",  # Prevent clickjacking
-            "base-uri 'self'",
-            "form-action 'self'",
-            "upgrade-insecure-requests"  # Force HTTPS in production
-        ]
+        # Content Security Policy (CSP) - Different for dev/prod
+        import os
+        is_production = os.getenv('FLASK_ENV') == 'production'
+        
+        if is_production:
+            # Production CSP - Strict, no unsafe-eval or unsafe-inline
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self'",  # No unsafe-eval or unsafe-inline in production
+                "style-src 'self' 'unsafe-inline'",  # Allow inline styles for UI frameworks
+                "img-src 'self' data: https:",
+                "font-src 'self' data:",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",  # Prevent clickjacking
+                "base-uri 'self'",
+                "form-action 'self'",
+                "upgrade-insecure-requests"  # Force HTTPS in production
+            ]
+        else:
+            # Development CSP - More permissive for development
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Allow for development tools
+                "style-src 'self' 'unsafe-inline'",  # Allow inline styles
+                "img-src 'self' data: https:",
+                "font-src 'self' data:",
+                "connect-src 'self' ws: wss:",  # Allow WebSocket for hot reload
+                "frame-ancestors 'none'",  # Prevent clickjacking
+                "base-uri 'self'",
+                "form-action 'self'"
+            ]
+        
         response.headers['Content-Security-Policy'] = '; '.join(csp_directives)
         
         # X-Frame-Options (legacy clickjacking protection)

@@ -12,18 +12,52 @@ def getUserByEmail(email):
 
 def getUserById(user_id):
     col = _get_col()
-    return col.find_one({"_id": ObjectId(user_id)})
+    return col.find_one({"_id": ObjectId(user_id)}, {"password": 0, "2fa_secret": 0})
 
 def getAllUsers():
     col = _get_col()
-    cursor = col.find({}, {"password": 0})
+    cursor = col.find({}, {"password": 0, "2fa_secret": 0})
     result = list(cursor)
     cursor.close()
     return result
 
 def updateUsuario(user_id, data):
+    """
+    Update user with field validation and projection
+    
+    Args:
+        user_id: User ID string
+        data: Dictionary with fields to update
+        
+    Returns:
+        MongoDB UpdateResult
+        
+    Raises:
+        ValueError: If invalid fields are provided
+    """
+    # Whitelist of allowed fields for update
+    allowed_fields = {
+        'nombre', 'email', 'user', 'password', 'avatar', 'rol', 'activo', '2fa_enabled'
+    }
+    
+    # Filter data to only allowed fields
+    filtered_data = {}
+    for field, value in data.items():
+        if field in allowed_fields and value is not None:
+            # Hash password if being updated
+            if field == 'password':
+                filtered_data[field] = generate_password_hash(value)
+            else:
+                filtered_data[field] = value
+    
+    if not filtered_data:
+        raise ValueError("No valid fields provided for update")
+    
     col = _get_col()
-    return col.update_one({"_id": ObjectId(user_id)}, {"$set": data})
+    return col.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": filtered_data}
+    )
 
 def deleteUsuario(user_id):
     col = _get_col()

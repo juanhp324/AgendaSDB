@@ -120,19 +120,49 @@ class TwoFactorSession:
         return session.get('2fa_user_data')
     
     @staticmethod
-    def increment_2fa_attempts(session) -> int:
-        """Increment 2FA attempt counter"""
-        attempts = session.get('2fa_attempts', 0) + 1
-        session['2fa_attempts'] = attempts
-        return attempts
+    def increment_2fa_attempts(session):
+        """Increment 2FA attempt counter using Redis"""
+        try:
+            from infrastructure.core.redis_rate_limiter import get_rate_limiter
+            redis_client = get_rate_limiter().redis_client
+            user_id = session.get('2fa_pending_user_id')
+            
+            if not user_id:
+                return 1
+            
+            key = f"2fa_attempts:{user_id}"
+            attempts = redis_client.incr(key)
+            if attempts == 1:
+                # Set expiration on first attempt (5 minutes)
+                redis_client.expire(key, 300)
+            
+            return attempts
+        except Exception:
+            # Fallback to session if Redis fails
+            attempts = session.get('2fa_attempts', 0) + 1
+            session['2fa_attempts'] = attempts
+            session['2fa_attempts_time'] = time.time()
+            return attempts
     
     @staticmethod
     def clear_2fa_pending(session):
-        """Clear 2FA pending state from session"""
+        """Clear 2FA pending state from session and Redis"""
+        # Clear Redis attempts counter
+        try:
+            from infrastructure.core.redis_rate_limiter import get_rate_limiter
+            redis_client = get_rate_limiter().redis_client
+            user_id = session.get('2fa_pending_user_id')
+            if user_id:
+                redis_client.delete(f"2fa_attempts:{user_id}")
+        except Exception:
+            pass  # Ignore Redis errors
+        
+        # Clear session data
         session.pop('2fa_pending', None)
-        session.pop('2fa_user_id', None)
+        session.pop('2fa_pending_user_id', None)
         session.pop('2fa_user_data', None)
         session.pop('2fa_attempts', None)
+        session.pop('2fa_attempts_time', None)
     
     @staticmethod
     def complete_2fa_login(session, user_data: dict):

@@ -9,23 +9,70 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SecureLogger:
-    """Secure logger that filters out sensitive information"""
+    """
+    Logger seguro que no expone información sensible e incluye contexto de usuario
+    """
     
     @staticmethod
-    def safe_log(message, level='info'):
-        """Log message without sensitive data"""
-        safe_message = SecureLogger._sanitize_message(message)
-        getattr(logger, level)(safe_message)
+    def _get_user_context():
+        """Obtener contexto del usuario actual"""
+        try:
+            from flask import session, request
+            
+            # Intentar obtener desde sesión
+            user_id = session.get('user_id')
+            email = session.get('email')
+            
+            # Intentar obtener desde JWT si está disponible
+            if not user_id and hasattr(request, 'current_user'):
+                user_id = request.current_user.get('user_id')
+                email = request.current_user.get('email')
+            
+            # Intentar obtener desde IP si no hay usuario
+            if not user_id:
+                ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+                return f"IP:{ip}"
+            
+            user_info = f"user:{email}" if email else f"user_id:{user_id}"
+            return user_info
+        except Exception:
+            return "anonymous"
     
     @staticmethod
-    def _sanitize_message(message):
-        """Remove potential sensitive information from log messages"""
-        import re
-        # Remove potential passwords, tokens, keys
-        sanitized = re.sub(r'(?i)(password|token|key|secret)[=:]\s*[^\s\}]+', r'\1=***REDACTED***', str(message))
-        # Remove MongoDB connection strings
-        sanitized = re.sub(r'mongodb\+?://[^\s\}]+', 'mongodb://***REDACTED***', sanitized)
-        return sanitized
+    def safe_log(message: str, level: str = "INFO"):
+        """Log seguro que redacta información sensible y agrega contexto de usuario"""
+        # Redactar patrones comunes de información sensible
+        sanitized_message = re.sub(r'password["\s]*[:=]["\s]*[^\s"]+', 'password=***REDACTED***', message, flags=re.IGNORECASE)
+        sanitized_message = re.sub(r'secret["\s]*[:=]["\s]*[^\s"]+', 'secret=***REDACTED***', sanitized_message, flags=re.IGNORECASE)
+        sanitized_message = re.sub(r'token["\s]*[:=]["\s]*[^\s"]+', 'token=***REDACTED***', sanitized_message, flags=re.IGNORECASE)
+        sanitized_message = re.sub(r'key["\s]*[:=]["\s]*[^\s"]+', 'key=***REDACTED***', sanitized_message, flags=re.IGNORECASE)
+        
+        # Agregar contexto de usuario
+        user_context = SecureLogger._get_user_context()
+        
+        # Log con timestamp y contexto
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{timestamp}] [{level}] [{user_context}] {sanitized_message}")
+    
+    @staticmethod
+    def log_security_event(event: str, details: str = ""):
+        """Log de eventos de seguridad con contexto"""
+        SecureLogger.safe_log(f"SECURITY_EVENT: {event} - {details}", "WARNING")
+    
+    @staticmethod
+    def log_error(error: Exception, context: str = ""):
+        """Log de errores con contexto y usuario"""
+        SecureLogger.safe_log(f"ERROR in {context}: {str(error)}", "ERROR")
+    
+    @staticmethod
+    def log_auth_attempt(result: str, email: str = "", ip: str = ""):
+        """Log de intentos de autenticación"""
+        if email:
+            SecureLogger.safe_log(f"AUTH_ATTEMPT: {result} for email: {email}", "INFO")
+        elif ip:
+            SecureLogger.safe_log(f"AUTH_ATTEMPT: {result} from IP: {ip}", "INFO")
+        else:
+            SecureLogger.safe_log(f"AUTH_ATTEMPT: {result}", "INFO")
 
 class RateLimiter:
     """
