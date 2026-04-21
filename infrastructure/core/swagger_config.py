@@ -31,17 +31,29 @@ class SwaggerConfig:
                 
                 Sistema de Gestión Institucional para la Inspectoría de las Antillas
                 
-                ### Autenticación
-                La API soporta dos métodos de autenticación:
-                1. **Sesión tradicional** - Para uso con frontend web
-                2. **JWT Tokens** - Para aplicaciones móviles y APIs externas
+                ### Autenticación JWT-Only
+                La API utiliza un sistema unificado de autenticación JWT:
+                1. **JWT Tokens** - Para todas las aplicaciones (web, móvil, APIs)
+                2. **Access Token** - 15 minutos de validez
+                3. **Refresh Token** - 30 días de validez
+                
+                ### Endpoints de Autenticación
+                - `POST /Login` - Login universal (web + JSON)
+                - `POST /api/auth/refresh` - Renovar access token
+                - `POST /api/auth/logout` - Cerrar sesión
+                
+                ### Endpoints de 2FA
+                - `POST /api/auth/setup-2fa` - Configurar 2FA (requiere password)
+                - `POST /api/auth/verify-2fa-setup` - Verificar y habilitar 2FA
+                - `POST /api/auth/disable-2fa` - Desactivar 2FA (requiere password)
+                - `GET /api/auth/2fa-status` - Estado de 2FA
                 
                 ### Seguridad
-                - Rate limiting en todos los endpoints de autenticación
-                - Tokens JWT con expiración de 15 minutos
-                - Soporte para 2FA (Two-Factor Authentication)
-                - Encriptación de secrets sensibles
-                - Headers de seguridad HTTP
+                - Rate limiting distribuido con Redis
+                - Password verification obligatoria para operaciones críticas
+                - 2FA secrets encriptados con Fernet
+                - Headers de seguridad HTTP (CSP, HSTS, etc.)
+                - Logging contextual y seguro
                 
                 ### Errores
                 La API utiliza códigos de estado HTTP estándar:
@@ -85,17 +97,11 @@ class SwaggerConfig:
                 ],
                 "components": {
                     "securitySchemes": {
-                        "SessionAuth": {
-                            "type": "apiKey",
-                            "in": "cookie",
-                            "name": "session",
-                            "description": "Autenticación por sesión Flask"
-                        },
                         "BearerAuth": {
                             "type": "http",
                             "scheme": "bearer",
                             "bearerFormat": "JWT",
-                            "description": "Autenticación JWT Bearer Token"
+                            "description": "JWT authentication token. Use: Authorization: Bearer <token>"
                         }
                     },
                     "schemas": {
@@ -195,6 +201,57 @@ class SwaggerConfig:
                                 "expires_in": {
                                     "type": "integer",
                                     "description": "Tiempo de expiración en segundos"
+                                }
+                            }
+                        },
+                        "TwoFASetupRequest": {
+                            "type": "object",
+                            "required": ["password"],
+                            "properties": {
+                                "password": {
+                                    "type": "string",
+                                    "description": "Contraseña actual del usuario (requerida para seguridad)"
+                                }
+                            }
+                        },
+                        "TwoFASetupResponse": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean"
+                                },
+                                "qr_code": {
+                                    "type": "string",
+                                    "description": "QR code en base64 para escanear"
+                                },
+                                "secret": {
+                                    "type": "string",
+                                    "description": "Secret TOTP (mostrar solo una vez)"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "description": "Mensaje de instrucciones"
+                                }
+                            }
+                        },
+                        "TwoFAVerifyRequest": {
+                            "type": "object",
+                            "required": ["code"],
+                            "properties": {
+                                "code": {
+                                    "type": "string",
+                                    "pattern": "^[0-9]{6}$",
+                                    "description": "Código de 6 dígitos del authenticator"
+                                }
+                            }
+                        },
+                        "TwoFADisableRequest": {
+                            "type": "object",
+                            "required": ["password"],
+                            "properties": {
+                                "password": {
+                                    "type": "string",
+                                    "description": "Contraseña actual (requerida para desactivar 2FA)"
                                 }
                             }
                         },

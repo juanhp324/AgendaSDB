@@ -41,9 +41,12 @@ El sistema implementa patrones de diseño modernos para garantizar la disponibil
 
 *   **Backend**: Python 3.11+, Flask 3.0.
 *   **Base de Datos**: MongoDB (PyMongo), MongoDB Atlas.
+*   **Cache & Rate Limiting**: Redis
 *   **Arquitectura**: Clean Architecture (Application, Domain, Infrastructure, Presentation).
 *   **Frontend**: CSS3 Vanilla (Variables CSS), HTML5 Semántico, JS Moderno.
 *   **Reportes**: `fpdf2` y `python-docx`.
+*   **Monitoreo**: Sentry.io
+*   **Autenticación**: JWT + 2FA (TOTP) con Fernet encryption
 
 ## :construction: Instalación y Despliegue Local
 
@@ -101,15 +104,17 @@ El sistema ha sido completamente reforzado con **seguridad de grado empresarial*
 ### :gear: Mejoras de Seguridad Implementadas
 - **Rate Limiting Distribuido**: Redis-based con fallback a memoria
 - **Autenticación 2FA**: TOTP compatible con Google Authenticator
-- **JWT Authentication**: Tokens de acceso + refresh para APIs
+- **JWT Authentication**: Tokens de acceso (15min) + refresh (30d) para APIs
+- **2FA Secrets Encriptados**: Fernet encryption para secrets en reposo
 - **Headers de Seguridad**: CSP, HSTS, XSS protection, anti-clickjacking
 - **Monitoreo Sentry**: Tracking de errores y rendimiento
 - **Pruebas Automatizadas**: Suite completa con 80%+ cobertura
 
 ### :lock: Características de Seguridad
-- **Doble Autenticación**: Sesión tradicional + JWT moderno
+- **JWT-Only Authentication**: Sistema unificado stateless y escalable
+- **Password Verification**: Requerida para operaciones críticas (2FA setup/disable)
 - **Protección CSRF**: Tokens por sesión para cambios de estado
-- **Rate Limiting**: 5 intentos por minuto en login
+- **Rate Limiting**: 5 intentos por minuto en login, 10 en refresh
 - **Control de Acceso**: RBAC con roles (user, admin, superadmin)
 - **Monitoreo**: Sentry integrado con protección de privacidad
 
@@ -128,17 +133,23 @@ AgendaSDB/
 
 ### :key: Flujos de Autenticación
 
-#### Autenticación por Sesión (Original)
-1. Login con email/contraseña
-2. Si 2FA habilitado: requiere código de 6 dígitos
-3. Sesión creada con datos del usuario
-4. Token CSRF requerido para cambios de estado
+#### Autenticación JWT (Único Sistema)
+1. **Login**: POST a `/Login` con credenciales (web o JSON)
+2. **2FA**: Si está habilitado, requiere código de 6 dígitos
+3. **Tokens**: Access token (15min) + refresh token (30d) emitidos
+4. **Acceso**: Bearer token en header para APIs, cookies para web
 
-#### Autenticación JWT (API)
-1. POST a `/api/auth/login` con credenciales
-2. Si 2FA: verificación con token temporal
-3. Tokens de acceso (1h) + refresh (30d) emitidos
-4. Bearer token en header para rutas protegidas
+#### Endpoints de 2FA
+- **Setup 2FA**: `/api/auth/setup-2fa` - Requiere verificación de contraseña
+- **Verify Setup**: `/api/auth/verify-2fa-setup` - Habilita 2FA con código
+- **Disable 2FA**: `/api/auth/disable-2fa` - Requiere verificación de contraseña
+- **Status**: `/api/auth/2fa-status` - Consultar estado actual
+
+#### Características de Seguridad
+- **Password Verification**: Obligatoria para setup/disable 2FA
+- **Secrets Encriptados**: Fernet encryption en reposo
+- **Rate Limiting**: Protección contra fuerza bruta
+- **JWT Stateless**: Escalable y distribuido
 
 ### :test_suite: Pruebas y Calidad
 
