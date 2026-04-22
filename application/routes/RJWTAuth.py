@@ -65,13 +65,13 @@ def login():
     # Check if user has 2FA enabled
     if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
         # Generate temporary token for 2FA verification
-        import jwt
-        from flask import current_app
-        temp_token = jwt.encode(
+        import jwt as pyjwt
+        from datetime import datetime, timedelta
+        temp_token = pyjwt.encode(
             {
                 'user_id': str(userData['_id']),
                 'type': 'temp_2fa',
-                'exp': jwt.datetime.datetime.utcnow() + jwt.datetime.timedelta(minutes=5)
+                'exp': datetime.utcnow() + timedelta(minutes=5)
             },
             current_app.secret_key,
             algorithm='HS256'
@@ -167,13 +167,13 @@ def jwt_login():
     # Check if user has 2FA enabled
     if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
         # Generate temporary token for 2FA verification
-        import jwt
-        from flask import current_app
-        temp_token = jwt.encode(
+        import jwt as pyjwt
+        from datetime import datetime, timedelta
+        temp_token = pyjwt.encode(
             {
                 'user_id': str(userData['_id']),
                 'type': 'temp_2fa',
-                'exp': jwt.datetime.datetime.utcnow() + jwt.datetime.timedelta(minutes=5)
+                'exp': datetime.utcnow() + timedelta(minutes=5)
             },
             current_app.secret_key,
             algorithm='HS256'
