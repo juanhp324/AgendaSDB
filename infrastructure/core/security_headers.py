@@ -40,11 +40,11 @@ class SecurityHeaders:
         else:
             # Development CSP - More permissive for development
             csp_directives = [
-                "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Allow for development tools
-                "style-src 'self' 'unsafe-inline'",  # Allow inline styles
+                "default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
                 "img-src 'self' data: https:",
-                "font-src 'self' data:",
+                "font-src 'self' data: https://fonts.gstatic.com",
                 "connect-src 'self' ws: wss:",  # Allow WebSocket for hot reload
                 "frame-ancestors 'none'",  # Prevent clickjacking
                 "base-uri 'self'",

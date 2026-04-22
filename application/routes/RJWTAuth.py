@@ -92,19 +92,23 @@ def login():
             return render_template('Auth/2FA.html', temp_token=temp_token, email=data.get('email'))
     
     # Generate JWT tokens
-    from infrastructure.core.jwt_auth import JWTAuth
-    jwt_auth = JWTAuth()
-    tokens = jwt_auth.generate_tokens(userData)
+    tokens = current_app.jwt_auth.generate_tokens(userData)
+    
+    # Set session for gateway compatibility
+    session['user_id'] = str(userData['_id'])
+    session['nombre'] = userData.get('nombre', 'Usuario')
+    session['rol'] = userData.get('rol', 'user')
+    session['email'] = userData.get('email', '')
+    session.permanent = True
     
     if request.is_json:
-        redirect_url = '/dashboard' if userData.get('rol') == 'admin' else '/profile'
         return jsonify({
             "success": True,
             "access_token": tokens['access_token'],
             "refresh_token": tokens['refresh_token'],
             "token_type": "Bearer",
             "expires_in": tokens['expires_in'],
-            "redirect": redirect_url,
+            "redirect": "/inicio",
             "user_info": {
                 "nombre": userData.get("nombre", "Usuario"),
                 "avatar": userData.get("avatar", ""),
@@ -113,7 +117,7 @@ def login():
         })
     else:
         # Para formulario web, guardar tokens y redirigir
-        response = redirect('/dashboard' if userData.get('rol') == 'admin' else '/profile')
+        response = redirect('/inicio')
         
         # Set JWT tokens as cookies for web
         response.set_cookie('access_token', tokens['access_token'], httponly=True, secure=True)
