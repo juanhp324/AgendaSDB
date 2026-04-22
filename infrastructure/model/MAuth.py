@@ -12,7 +12,7 @@ def getUserByEmail(email):
 
 def getUserById(user_id):
     col = _get_col()
-    return col.find_one({"_id": ObjectId(user_id)}, {"password": 0, "2fa_secret": 0})
+    return col.find_one({"_id": ObjectId(user_id)}, {"password": 0, "2fa_secret": 0, "trusted_devices": 0})
 
 def getAllUsers():
     col = _get_col()
@@ -58,6 +58,23 @@ def updateUsuario(user_id, data):
         {"_id": ObjectId(user_id)}, 
         {"$set": filtered_data}
     )
+
+def getTrustedDevices(user_id) -> list:
+    col = _get_col()
+    user = col.find_one({"_id": ObjectId(user_id)}, {"trusted_devices": 1})
+    return (user or {}).get("trusted_devices", [])
+
+def addTrustedDevice(user_id, device: dict):
+    col = _get_col()
+    return col.update_one({"_id": ObjectId(user_id)}, {"$push": {"trusted_devices": device}})
+
+def revokeTrustedDevice(user_id, device_id: str):
+    col = _get_col()
+    return col.update_one({"_id": ObjectId(user_id)}, {"$pull": {"trusted_devices": {"id": device_id}}})
+
+def revokeAllTrustedDevices(user_id):
+    col = _get_col()
+    return col.update_one({"_id": ObjectId(user_id)}, {"$set": {"trusted_devices": []}})
 
 def update2FA(user_id, enabled, secret=None):
     """Enable or disable 2FA for a user"""

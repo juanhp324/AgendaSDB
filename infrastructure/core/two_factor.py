@@ -2,6 +2,9 @@ import pyotp
 import qrcode
 import io
 import base64
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 from typing import Optional, Tuple
 from infrastructure.core.safety import SecureLogger
 
@@ -179,3 +182,63 @@ class TwoFactorSession:
 # 2FA Configuration
 MAX_2FA_ATTEMPTS = 3
 TWO_FA_TIMEOUT = 300  # 5 minutes in seconds
+
+
+class TrustedDeviceManager:
+    """Manage trusted devices to skip 2FA on known browsers/devices."""
+    COOKIE_NAME = 'td_token'
+    EXPIRE_DAYS = 30
+
+    @staticmethod
+    def _device_name(request) -> str:
+        ua = request.headers.get('User-Agent', '')
+        browser = 'Navegador'
+        if 'Edg/' in ua or 'Edge/' in ua:  browser = 'Edge'
+        elif 'Chrome/' in ua:              browser = 'Chrome'
+        elif 'Firefox/' in ua:             browser = 'Firefox'
+        elif 'Safari/' in ua:              browser = 'Safari'
+        os_name = ''
+        if 'Windows' in ua:                         os_name = 'Windows'
+        elif 'Macintosh' in ua or 'Mac OS X' in ua: os_name = 'macOS'
+        elif 'Android' in ua:                       os_name = 'Android'
+        elif 'iPhone' in ua or 'iPad' in ua:        os_name = 'iOS'
+        elif 'Linux' in ua:                         os_name = 'Linux'
+        return f"{browser}{' · ' + os_name if os_name else ''}"
+
+    @staticmethod
+    def create_entry(request) -> tuple:
+        """Returns (raw_token, device_dict) — store device_dict in DB, send raw_token as cookie."""
+        token = secrets.token_urlsafe(48)
+        return token, {
+            'id': secrets.token_hex(16),
+            'token_hash': hashlib.sha256(token.encode()).hexdigest(),
+            'device_name': TrustedDeviceManager._device_name(request),
+            'ip': (request.environ.get('HTTP_X_FORWARDED_FOR', '') or request.remote_addr or '').split(',')[0].strip(),
+            'created_at': datetime.utcnow(),
+            'expires_at': datetime.utcnow() + timedelta(days=TrustedDeviceManager.EXPIRE_DAYS),
+        }
+
+    @staticmethod
+    def verify(cookie_token: str, trusted_devices: list) -> bool:
+        """Return True if the cookie matches a non-expired trusted device."""
+        if not cookie_token or not trusted_devices:
+            return False
+        token_hash = hashlib.sha256(cookie_token.encode()).hexdigest()
+        now = datetime.utcnow()
+        for d in trusted_devices:
+            exp = d.get('expires_at')
+            if d.get('token_hash') == token_hash and exp and exp > now:
+                return True
+        return False
+
+    @staticmethod
+    def set_cookie(response, token: str):
+        response.set_cookie(
+            TrustedDeviceManager.COOKIE_NAME, token,
+            max_age=int(timedelta(days=TrustedDeviceManager.EXPIRE_DAYS).total_seconds()),
+            httponly=True, secure=True, samesite='Lax'
+        )
+
+    @staticmethod
+    def delete_cookie(response):
+        response.delete_cookie(TrustedDeviceManager.COOKIE_NAME)

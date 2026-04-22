@@ -200,6 +200,15 @@
           </div>
         </div>
       </div>
+      <div class="form-group" style="border-top:1px solid var(--border,#e2e8f0);padding-top:16px;margin-top:8px">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Dispositivos de confianza</span>
+          <button type="button" id="btn-revoke-all-td" class="btn btn-ghost" style="font-size:0.75rem;padding:2px 8px;color:#dc2626;border-color:#dc2626;display:none" onclick="revokeAllTrustedDevices()">Revocar todos</button>
+        </label>
+        <div id="trusted-devices-list" style="margin-top:8px;font-size:0.82rem;color:var(--text-secondary,#64748b)">
+          <span>Cargando...</span>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closePerfilModal()">Cancelar</button>

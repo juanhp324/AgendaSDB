@@ -192,6 +192,7 @@ async function openPerfilModal() {
             document.getElementById('twofa-off-view').style.display = twofa ? 'none' : '';
             document.getElementById('twofa-on-view').style.display = twofa ? '' : 'none';
             document.getElementById('twofa-setup-view').style.display = 'none';
+            loadTrustedDevices();
             modal.classList.add('active');
             toggleBodyScroll();
             document.getElementById('userDropdown').classList.remove('open');
@@ -240,6 +241,55 @@ async function guardarPerfil() {
         closeStatusModal();
         showToast('Error de conexión', 'error');
     }
+}
+
+// ── Trusted Devices ──
+async function loadTrustedDevices() {
+    const list = document.getElementById('trusted-devices-list');
+    const btnAll = document.getElementById('btn-revoke-all-td');
+    if (!list) return;
+    try {
+        const res = await fetch('/perfil/trusted-devices');
+        const data = await res.json();
+        if (!data.success) { list.innerHTML = '<span>Error al cargar dispositivos.</span>'; return; }
+        if (data.devices.length === 0) {
+            list.innerHTML = '<span>No hay dispositivos de confianza activos.</span>';
+            if (btnAll) btnAll.style.display = 'none';
+        } else {
+            list.innerHTML = data.devices.map(d => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border,#f1f5f9)">
+                  <div><strong>${d.device_name}</strong><br>
+                    <span style="color:var(--text-muted,#94a3b8)">${d.ip} &nbsp;·&nbsp; Creado ${d.created_at} &nbsp;·&nbsp; Expira ${d.expires_at}</span>
+                  </div>
+                  <button onclick="revokeTrustedDevice('${d.id}')" class="btn btn-ghost" style="font-size:0.75rem;padding:2px 8px">✕</button>
+                </div>`).join('');
+            if (btnAll) btnAll.style.display = '';
+        }
+    } catch { list.innerHTML = '<span>Error de conexión.</span>'; }
+}
+
+async function revokeTrustedDevice(deviceId) {
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const res = await fetch(`/perfil/trusted-devices/${deviceId}/revoke`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
+        });
+        const data = await res.json();
+        if (data.success) { showToast('Dispositivo revocado', 'success'); loadTrustedDevices(); }
+        else showToast(data.message || 'Error', 'error');
+    } catch { showToast('Error de conexión', 'error'); }
+}
+
+async function revokeAllTrustedDevices() {
+    if (!confirm('¿Revocar todos los dispositivos de confianza?')) return;
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const res = await fetch('/perfil/trusted-devices/revoke-all', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
+        });
+        const data = await res.json();
+        if (data.success) { showToast('Todos los dispositivos revocados', 'success'); loadTrustedDevices(); }
+    } catch { showToast('Error de conexión', 'error'); }
 }
 
 // ── 2FA ──

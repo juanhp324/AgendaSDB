@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from infrastructure.core.jwt_auth import jwt_required, role_required, blacklist_token
-from infrastructure.core.two_factor import TwoFactorAuth, TwoFactorSession, MAX_2FA_ATTEMPTS
+from infrastructure.core.two_factor import TwoFactorAuth, TwoFactorSession, TrustedDeviceManager, MAX_2FA_ATTEMPTS
 from infrastructure.core.encryption import get_encryption_manager
 from werkzeug.security import check_password_hash
 from infrastructure.core.safety import SecureLogger
@@ -35,7 +35,10 @@ def login():
         data = {
             'email': request.form.get('email', ''),
             'password': request.form.get('password', ''),
-            'remember': request.form.get('remember') == 'on'
+            'remember': request.form.get('remember') == 'on',
+            '2fa_token': request.form.get('2fa_token', ''),
+            'temp_token': request.form.get('temp_token', ''),
+            'remember_device': request.form.get('remember_device') == 'on'
         }
     
     # Check if this is 2FA verification
@@ -64,6 +67,27 @@ def login():
 
     # Check if user has 2FA enabled
     if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
+        # Check trusted device cookie — skip 2FA if device is known
+        td_cookie = request.cookies.get(TrustedDeviceManager.COOKIE_NAME)
+        if td_cookie:
+            td_list = MAuth.getTrustedDevices(str(userData['_id']))
+            if TrustedDeviceManager.verify(td_cookie, td_list):
+                # Trusted device — complete login without 2FA
+                try:
+                    tokens = current_app.jwt_auth.generate_tokens(userData)
+                except Exception as e:
+                    return jsonify({"success": False, "message": f"Error al generar sesión: {str(e)}"}), 500
+                session['user_id'] = str(userData['_id'])
+                session['nombre'] = userData.get('nombre', 'Usuario')
+                session['rol'] = userData.get('rol', 'user')
+                session['email'] = userData.get('email', '')
+                session.permanent = True
+                if request.is_json:
+                    return jsonify({"success": True, "access_token": tokens['access_token'],
+                                    "refresh_token": tokens['refresh_token'], "token_type": "Bearer",
+                                    "expires_in": tokens['expires_in'], "redirect": "/inicio"})
+                return redirect('/inicio')
+
         # Generate temporary token for 2FA verification
         import jwt as pyjwt
         from datetime import datetime, timedelta
@@ -159,6 +183,46 @@ def get_perfil():
         })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+@bp.route('/perfil/trusted-devices', methods=['GET'])
+def get_trusted_devices():
+    """Listar dispositivos de confianza del usuario en sesión"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False}), 401
+    devices = MAuth.getTrustedDevices(user_id)
+    result = []
+    for d in devices:
+        created = d.get('created_at')
+        expires = d.get('expires_at')
+        result.append({
+            'id': d.get('id', ''),
+            'device_name': d.get('device_name', 'Dispositivo'),
+            'ip': d.get('ip', ''),
+            'created_at': created.strftime('%d/%m/%Y') if hasattr(created, 'strftime') else str(created)[:10],
+            'expires_at': expires.strftime('%d/%m/%Y') if hasattr(expires, 'strftime') else str(expires)[:10],
+        })
+    return jsonify({"success": True, "devices": result})
+
+@bp.route('/perfil/trusted-devices/<device_id>/revoke', methods=['POST'])
+def revoke_trusted_device(device_id):
+    """Revocar un dispositivo de confianza"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False}), 401
+    MAuth.revokeTrustedDevice(user_id, device_id)
+    return jsonify({"success": True, "message": "Dispositivo revocado"})
+
+@bp.route('/perfil/trusted-devices/revoke-all', methods=['POST'])
+def revoke_all_trusted_devices():
+    """Revocar todos los dispositivos de confianza"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False}), 401
+    MAuth.revokeAllTrustedDevices(user_id)
+    resp = jsonify({"success": True, "message": "Todos los dispositivos revocados"})
+    TrustedDeviceManager.delete_cookie(resp)
+    return resp
 
 @bp.route('/perfil/2fa/setup', methods=['GET'])
 def perfil_2fa_setup():
@@ -335,7 +399,12 @@ def verify_2fa(data):
     if two_fa.verify_token(secret, token_2fa):
         # Complete login using session management
         TwoFactorSession.complete_2fa_login(session, user)
-        return redirect(url_for('RInicio.inicio'))
+        response = redirect(url_for('RInicio.inicio'))
+        if data.get('remember_device'):
+            td_token, td_entry = TrustedDeviceManager.create_entry(request)
+            MAuth.addTrustedDevice(str(user['_id']), td_entry)
+            TrustedDeviceManager.set_cookie(response, td_token)
+        return response
     else:
         # Increment attempts and check for lockout
         attempts = TwoFactorSession.increment_2fa_attempts(session)
