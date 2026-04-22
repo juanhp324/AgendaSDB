@@ -31,6 +31,7 @@ def get_usuarios():
                 'rol': u.get('rol', ''),
                 'avatar': u.get('avatar', ''),
                 'activo': u.get('activo', True),
+                '2fa_enabled': u.get('2fa_enabled', False),
             })
         return jsonify({"success": True, "usuarios": result})
     except Exception as exc:
@@ -85,6 +86,22 @@ def update_usuario(user_id):
         if result.modified_count > 0:
             return jsonify({"success": True, "message": "Usuario actualizado"})
         return jsonify({"success": False, "message": "No hubo cambios"}), 200
+    except Exception as exc:
+        return jsonify({"success": False, "message": str(exc)}), 500
+
+@bp.route('/disable_2fa_usuario/<user_id>', methods=['POST'])
+def disable_2fa_usuario(user_id):
+    rol_actual = session.get('rol', '')
+    if rol_actual not in ['admin', 'superadmin']:
+        return jsonify({"success": False, "message": "Acceso denegado"}), 403
+    try:
+        target = MAuth.getUserById(user_id)
+        if not target:
+            return jsonify({"success": False, "message": "Usuario no encontrado"}), 404
+        if not target.get('2fa_enabled', False):
+            return jsonify({"success": False, "message": "El usuario no tiene 2FA activo"}), 400
+        MAuth.update2FA(user_id, False)
+        return jsonify({"success": True, "message": "2FA desactivado para el usuario"})
     except Exception as exc:
         return jsonify({"success": False, "message": str(exc)}), 500
 

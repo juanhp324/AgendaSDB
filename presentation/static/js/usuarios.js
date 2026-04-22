@@ -110,6 +110,9 @@ function verDetalleUsuario(id) {
       btnDesactivar.className = u.activo === false ? 'btn btn-secondary' : 'btn btn-secondary'; // Mantener estilo neutro o ajustar si se desea
   }
 
+  const btn2FA = document.getElementById('btnDisable2FADetalle');
+  if (btn2FA) btn2FA.style.display = u['2fa_enabled'] ? '' : 'none';
+
   window.currentDetailUserId = id;
   document.getElementById('userDetailModal').classList.add('active');
   toggleBodyScroll();
@@ -135,6 +138,27 @@ function manejadorDesactivarDesdeDetalle() {
 function manejadorEliminarDesdeDetalle() {
     if (!window.currentDetailUserId) return;
     confirmarEliminarUsuario(window.currentDetailUserId);
+}
+
+async function manejadorDisable2FA() {
+    if (!window.currentDetailUserId) return;
+    if (!confirm('¿Desactivar 2FA para este usuario?')) return;
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const res = await fetch(`/disable_2fa_usuario/${window.currentDetailUserId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('2FA desactivado para el usuario', 'success');
+            document.getElementById('btnDisable2FADetalle').style.display = 'none';
+            const u = window.allUsersData.find(x => x._id === window.currentDetailUserId);
+            if (u) u['2fa_enabled'] = false;
+        } else {
+            showToast(data.message || 'Error', 'error');
+        }
+    } catch { showToast('Error de conexión', 'error'); }
 }
 
 function confirmarDesactivar(id) {
