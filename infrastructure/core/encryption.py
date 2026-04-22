@@ -20,14 +20,17 @@ class EncryptionManager:
         env_key = os.getenv('ENCRYPTION_KEY')
         if env_key:
             try:
-                return base64.urlsafe_b64decode(env_key.encode())
+                # Validar que es base64 válido de 32 bytes
+                decoded = base64.urlsafe_b64decode(env_key.encode() + b'==')
+                if len(decoded) >= 32:
+                    return env_key.encode()  # Fernet espera la clave en base64, no bytes crudos
             except Exception as e:
                 SecureLogger.safe_log(f"Error decoding ENCRYPTION_KEY: {str(e)}")
         
         # Generar nueva clave si no existe
         key = Fernet.generate_key()
         SecureLogger.safe_log("Generated new encryption key - save this ENCRYPTION_KEY for production:")
-        SecureLogger.safe_log(base64.urlsafe_b64encode(key).decode())
+        SecureLogger.safe_log(key.decode())
         return key
     
     def encrypt(self, data: str) -> str:
