@@ -18,14 +18,8 @@ class SentryMonitor:
     def init_app(self, app: Flask):
         """Initialize Sentry monitoring with Flask app"""
         if not self.dsn or self.dsn == 'your-sentry-dsn-here':
-            if self.environment == 'production':
-                raise ValueError(
-                    "SENTRY_DSN is required in production. "
-                    "Set SENTRY_DSN environment variable or disable Sentry monitoring."
-                )
-            else:
-                SecureLogger.safe_log("Sentry DSN not configured, monitoring disabled")
-                return
+            SecureLogger.safe_log("Sentry DSN not configured, monitoring disabled")
+            return
         
         try:
             sentry_sdk.init(

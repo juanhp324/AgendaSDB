@@ -97,12 +97,14 @@ def login():
     tokens = jwt_auth.generate_tokens(userData)
     
     if request.is_json:
+        redirect_url = '/dashboard' if userData.get('rol') == 'admin' else '/profile'
         return jsonify({
             "success": True,
             "access_token": tokens['access_token'],
             "refresh_token": tokens['refresh_token'],
             "token_type": "Bearer",
             "expires_in": tokens['expires_in'],
+            "redirect": redirect_url,
             "user_info": {
                 "nombre": userData.get("nombre", "Usuario"),
                 "avatar": userData.get("avatar", ""),

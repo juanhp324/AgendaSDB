@@ -17,3 +17,7 @@ services:
         sync: false
       - key: FLASK_ENV
         value: production
+      - key: SENTRY_DSN
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false

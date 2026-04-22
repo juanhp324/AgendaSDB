@@ -74,6 +74,8 @@ def global_security_check():
             token = request.get_json(silent=True).get('csrf_token')
 
         if not CSRFProtector.validate_token(token):
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": "Token CSRF inválido o ausente."}), 403
             abort(403, description="Token CSRF inválido o ausente.")
 
 if __name__ == '__main__':

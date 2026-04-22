@@ -27,10 +27,10 @@ class SecurityHeaders:
             # Production CSP - Strict, no unsafe-eval or unsafe-inline
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self'",  # No unsafe-eval or unsafe-inline in production
-                "style-src 'self' 'unsafe-inline'",  # Allow inline styles for UI frameworks
+                "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "img-src 'self' data: https:",
-                "font-src 'self' data:",
+                "font-src 'self' data: https://fonts.gstatic.com",
                 "connect-src 'self'",
                 "frame-ancestors 'none'",  # Prevent clickjacking
                 "base-uri 'self'",
