@@ -28,7 +28,7 @@ class SecurityHeaders:
             csp_directives = [
                 "default-src 'self'",
                 "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
                 "img-src 'self' data: https:",
                 "font-src 'self' data: https://fonts.gstatic.com",
                 "connect-src 'self'",
@@ -42,10 +42,10 @@ class SecurityHeaders:
             csp_directives = [
                 "default-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
                 "img-src 'self' data: https:",
                 "font-src 'self' data: https://fonts.gstatic.com",
-                "connect-src 'self' ws: wss:",  # Allow WebSocket for hot reload
+                "connect-src 'self' ws: wss: https://cdn.jsdelivr.net",  # Allow WebSocket for hot reload + source maps
                 "frame-ancestors 'none'",  # Prevent clickjacking
                 "base-uri 'self'",
                 "form-action 'self'"
