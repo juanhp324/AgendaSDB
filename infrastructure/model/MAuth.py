@@ -8,7 +8,7 @@ def _get_col():
 
 def getUserByEmail(email):
     col = _get_col()
-    return col.find_one({"email": email}, {"email": 1, "password": 1, "rol": 1, "nombre": 1, "user": 1, "avatar": 1, "activo": 1})
+    return col.find_one({"email": email}, {"email": 1, "password": 1, "rol": 1, "nombre": 1, "user": 1, "avatar": 1, "activo": 1, "2fa_enabled": 1, "2fa_secret": 1})
 
 def getUserById(user_id):
     col = _get_col()
@@ -58,6 +58,16 @@ def updateUsuario(user_id, data):
         {"_id": ObjectId(user_id)}, 
         {"$set": filtered_data}
     )
+
+def update2FA(user_id, enabled, secret=None):
+    """Enable or disable 2FA for a user"""
+    col = _get_col()
+    update = {"$set": {"2fa_enabled": enabled}}
+    if enabled and secret is not None:
+        update["$set"]["2fa_secret"] = secret
+    elif not enabled:
+        update["$unset"] = {"2fa_secret": ""}
+    return col.update_one({"_id": ObjectId(user_id)}, update)
 
 def deleteUsuario(user_id):
     col = _get_col()

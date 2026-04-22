@@ -185,7 +185,13 @@ async function openPerfilModal() {
             document.getElementById('perfil_user').value = data.usuario.user || '';
             document.getElementById('perfil_rol').value = data.usuario.rol || '';
             document.getElementById('perfil_password').value = '';
-
+            const twofa = data.usuario['2fa_enabled'] || false;
+            document.getElementById('twofa-badge').textContent = twofa ? 'Activado' : 'Desactivado';
+            document.getElementById('twofa-badge').style.background = twofa ? '#dcfce7' : '#fee2e2';
+            document.getElementById('twofa-badge').style.color = twofa ? '#16a34a' : '#dc2626';
+            document.getElementById('twofa-off-view').style.display = twofa ? 'none' : '';
+            document.getElementById('twofa-on-view').style.display = twofa ? '' : 'none';
+            document.getElementById('twofa-setup-view').style.display = 'none';
             modal.classList.add('active');
             toggleBodyScroll();
             document.getElementById('userDropdown').classList.remove('open');
@@ -234,6 +240,73 @@ async function guardarPerfil() {
         closeStatusModal();
         showToast('Error de conexión', 'error');
     }
+}
+
+// ── 2FA ──
+async function init2FASetup() {
+    try {
+        const res = await fetch('/perfil/2fa/setup');
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('twofa-qr-img').src = data.qr_code;
+            document.getElementById('twofa-code-input').value = '';
+            document.getElementById('twofa-off-view').style.display = 'none';
+            document.getElementById('twofa-setup-view').style.display = '';
+        } else {
+            showToast(data.message || 'Error al iniciar 2FA', 'error');
+        }
+    } catch { showToast('Error de conexión', 'error'); }
+}
+
+async function verify2FACode() {
+    const code = document.getElementById('twofa-code-input').value.trim();
+    if (code.length !== 6) { showToast('Ingresa el código de 6 dígitos', 'warning'); return; }
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const res = await fetch('/perfil/2fa/enable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('2FA activado correctamente 🔐', 'success');
+            document.getElementById('twofa-setup-view').style.display = 'none';
+            document.getElementById('twofa-on-view').style.display = '';
+            document.getElementById('twofa-badge').textContent = 'Activado';
+            document.getElementById('twofa-badge').style.background = '#dcfce7';
+            document.getElementById('twofa-badge').style.color = '#16a34a';
+        } else {
+            showToast(data.message || 'Código incorrecto', 'error');
+        }
+    } catch { showToast('Error de conexión', 'error'); }
+}
+
+function cancel2FASetup() {
+    document.getElementById('twofa-setup-view').style.display = 'none';
+    document.getElementById('twofa-off-view').style.display = '';
+}
+
+async function disable2FA() {
+    if (!confirm('¿Seguro que deseas desactivar 2FA?')) return;
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const res = await fetch('/perfil/2fa/disable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('2FA desactivado', 'success');
+            document.getElementById('twofa-on-view').style.display = 'none';
+            document.getElementById('twofa-off-view').style.display = '';
+            document.getElementById('twofa-badge').textContent = 'Desactivado';
+            document.getElementById('twofa-badge').style.background = '#fee2e2';
+            document.getElementById('twofa-badge').style.color = '#dc2626';
+        } else {
+            showToast(data.message || 'Error al desactivar 2FA', 'error');
+        }
+    } catch { showToast('Error de conexión', 'error'); }
 }
 
 // ── DARK MODE ──

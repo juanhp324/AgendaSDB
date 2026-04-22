@@ -153,9 +153,60 @@ def get_perfil():
                 "email": user.get('email', ''),
                 "user": user.get('user', ''),
                 "rol": user.get('rol', ''),
-                "avatar": user.get('avatar', '')
+                "avatar": user.get('avatar', ''),
+                "2fa_enabled": user.get('2fa_enabled', False)
             }
         })
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@bp.route('/perfil/2fa/setup', methods=['GET'])
+def perfil_2fa_setup():
+    """Generar QR y secreto para configurar 2FA"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "No autenticado"}), 401
+    try:
+        email = session.get('email', '')
+        two_fa = TwoFactorAuth()
+        secret, qr_code = two_fa.setup_2fa_data(email)
+        session['2fa_setup_secret'] = secret
+        return jsonify({"success": True, "qr_code": qr_code, "secret": secret})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@bp.route('/perfil/2fa/enable', methods=['POST'])
+def perfil_2fa_enable():
+    """Verificar código y activar 2FA"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "No autenticado"}), 401
+    data = request.get_json(silent=True) or {}
+    code = str(data.get('code', '')).strip()
+    secret = session.get('2fa_setup_secret')
+    if not secret:
+        return jsonify({"success": False, "message": "No hay configuración 2FA pendiente"}), 400
+    two_fa = TwoFactorAuth()
+    if not two_fa.verify_token(secret, code):
+        return jsonify({"success": False, "message": "Código incorrecto. Verifica tu app."}), 400
+    try:
+        enc = get_encryption_manager()
+        encrypted = enc.encrypt(secret)
+        MAuth.update2FA(user_id, True, encrypted)
+        session.pop('2fa_setup_secret', None)
+        return jsonify({"success": True, "message": "2FA activado correctamente"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@bp.route('/perfil/2fa/disable', methods=['POST'])
+def perfil_2fa_disable():
+    """Desactivar 2FA"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "No autenticado"}), 401
+    try:
+        MAuth.update2FA(user_id, False)
+        return jsonify({"success": True, "message": "2FA desactivado"})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
