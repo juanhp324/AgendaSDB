@@ -20,7 +20,13 @@ class RedisRateLimiter:
     def _connect_redis(self):
         """Establish connection to Redis"""
         try:
-            self.redis_client = redis.from_url(self.redis_url, decode_responses=True)
+            self.redis_client = redis.from_url(
+                self.redis_url,
+                decode_responses=True,
+                socket_timeout=1.0,
+                socket_connect_timeout=1.0,
+                retry_on_timeout=False
+            )
             # Test connection
             self.redis_client.ping()
             SecureLogger.safe_log("Redis connection established for rate limiting")
