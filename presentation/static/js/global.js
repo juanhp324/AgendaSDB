@@ -215,9 +215,10 @@ async function guardarPerfil() {
     showStatusModal('saving', 'Actualizando tu perfil...');
 
     try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const res = await fetch('/update_perfil', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ nombre, email, user, password })
         });
         

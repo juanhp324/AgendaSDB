@@ -136,6 +136,49 @@ def logout():
     flash("Has cerrado sesión.", "info")
     return redirect(url_for('RJWTAuth.show_login_form'))
 
+@bp.route('/get_perfil', methods=['GET'])
+def get_perfil():
+    """Obtener datos del perfil del usuario en sesión"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "No autenticado"}), 401
+    try:
+        user = MAuth.getUserById(user_id)
+        if not user:
+            return jsonify({"success": False, "message": "Usuario no encontrado"}), 404
+        return jsonify({
+            "success": True,
+            "usuario": {
+                "nombre": user.get('nombre', ''),
+                "email": user.get('email', ''),
+                "user": user.get('user', ''),
+                "rol": user.get('rol', ''),
+                "avatar": user.get('avatar', '')
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@bp.route('/update_perfil', methods=['PUT'])
+def update_perfil():
+    """Actualizar datos del perfil del usuario en sesión"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "No autenticado"}), 401
+    data = request.get_json(silent=True) or {}
+    try:
+        updates = {}
+        if data.get('nombre'): updates['nombre'] = data['nombre']
+        if data.get('email'):  updates['email']  = data['email']
+        if data.get('user'):   updates['user']   = data['user']
+        if data.get('password'): updates['password'] = data['password']
+        MAuth.updateUsuario(user_id, updates)
+        if 'nombre' in updates:
+            session['nombre'] = updates['nombre']
+        return jsonify({"success": True, "message": "Perfil actualizado"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 @bp.route('/api/auth/login', methods=['POST'])
 def jwt_login():
     """JWT login endpoint"""

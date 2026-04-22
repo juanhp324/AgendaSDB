@@ -10,6 +10,7 @@ PROTECTED_ENDPOINTS = [
     'RUsuarios.usuarios', 'RUsuarios.get_usuarios', 'RUsuarios.update_usuario',
     'RUsuarios.delete_usuario', 'RUsuarios.create_usuario',
     'RJWTAuth.update_profile_jwt', 'RJWTAuth.get_current_user',
+    'RJWTAuth.get_perfil', 'RJWTAuth.update_perfil',
 ]
 
 from infrastructure.core.safety import ServiceUnavailableError
