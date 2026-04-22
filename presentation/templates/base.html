@@ -184,19 +184,19 @@
           <span id="twofa-badge" style="font-size:0.75rem;padding:2px 8px;border-radius:99px;background:#fee2e2;color:#dc2626">Desactivado</span>
         </label>
         <div id="twofa-off-view">
-          <button type="button" class="btn btn-ghost" style="margin-top:8px;width:100%" onclick="init2FASetup()">🔐 Activar 2FA</button>
+          <button type="button" class="btn btn-ghost" style="margin-top:8px;width:100%" onclick="event.stopPropagation(); init2FASetup()">🔐 Activar 2FA</button>
         </div>
         <div id="twofa-on-view" style="display:none">
           <p style="font-size:0.82rem;color:var(--text-secondary,#64748b);margin:6px 0">2FA está activo en tu cuenta.</p>
-          <button type="button" class="btn btn-ghost" style="width:100%;color:#dc2626;border-color:#dc2626" onclick="disable2FA()">Desactivar 2FA</button>
+          <button type="button" class="btn btn-ghost" style="width:100%;color:#dc2626;border-color:#dc2626" onclick="event.stopPropagation(); disable2FA()">Desactivar 2FA</button>
         </div>
         <div id="twofa-setup-view" style="display:none;margin-top:10px">
           <p style="font-size:0.82rem;color:var(--text-secondary,#64748b);margin-bottom:8px">Escanea el QR con <strong>Google Authenticator</strong> o <strong>Authy</strong>, luego ingresa el código:</p>
           <img id="twofa-qr-img" src="" alt="QR 2FA" style="display:block;margin:0 auto 12px;width:160px;height:160px;border-radius:8px;border:2px solid var(--border,#e2e8f0)"/>
           <input type="text" id="twofa-code-input" class="form-input" placeholder="Código de 6 dígitos" maxlength="6" inputmode="numeric" style="text-align:center;letter-spacing:6px;font-size:1.3rem"/>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <button type="button" class="btn btn-primary" style="flex:1" onclick="verify2FACode()">Confirmar y Activar</button>
-            <button type="button" class="btn btn-ghost" onclick="cancel2FASetup()">Cancelar</button>
+            <button type="button" class="btn btn-primary" style="flex:1" onclick="event.stopPropagation(); verify2FACode()">Confirmar y Activar</button>
+            <button type="button" class="btn btn-ghost" onclick="event.stopPropagation(); cancel2FASetup()">Cancelar</button>
           </div>
         </div>
       </div>
