@@ -180,7 +180,28 @@ function confirmarDesactivar(id) {
                 const data = await res.json();
                 if (data.success) {
                     showToast(data.message || `Usuario ${action.toLowerCase()}do`, 'success');
-                    cargarUsuarios();
+                    await cargarUsuarios();
+                    // Reload modal with updated data
+                    if (window.currentDetailUserId === id) {
+                        const updatedUser = window.allUsersData.find(x => x._id === id);
+                        if (updatedUser) {
+                            document.getElementById('detalleUserFullNombre').textContent = updatedUser.nombre;
+                            document.getElementById('detalleUserNombreDisplay').textContent = updatedUser.nombre;
+                            document.getElementById('detalleUserEmail').textContent = updatedUser.email;
+                            document.getElementById('detalleUserUsername').textContent = updatedUser.user;
+                            const rolBadge = document.getElementById('detalleUserRol');
+                            rolBadge.textContent = updatedUser.rol;
+                            rolBadge.className = `badge badge-${updatedUser.rol}`;
+                            const avatar = document.getElementById('detalleUserAvatar');
+                            avatar.textContent = updatedUser.nombre[0].toUpperCase();
+                            // Update deactivate button text
+                            const btnDesactivar = document.getElementById('btnDesactivarDesdeDetalle');
+                            const txtDesactivar = document.getElementById('txtBtnDesactivar');
+                            if (btnDesactivar && txtDesactivar) {
+                                txtDesactivar.textContent = updatedUser.activo === false ? 'Reactivar' : 'Desactivar';
+                            }
+                        }
+                    }
                 } else {
                     showToast(data.message || 'Error', 'error');
                 }
