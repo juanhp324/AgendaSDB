@@ -300,10 +300,12 @@ async function init2FASetup() {
         const data = await res.json();
         console.log('2FA setup response:', data);
         if (data.success) {
+            console.log('Setting QR src and showing setup view');
             document.getElementById('twofa-qr-img').src = data.qr_code;
             document.getElementById('twofa-code-input').value = '';
             document.getElementById('twofa-off-view').style.display = 'none';
             document.getElementById('twofa-setup-view').style.display = '';
+            console.log('Setup view display:', document.getElementById('twofa-setup-view').style.display);
         } else {
             showToast(data.message || 'Error al iniciar 2FA', 'error');
         }
