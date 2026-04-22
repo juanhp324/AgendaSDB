@@ -294,9 +294,11 @@ async function revokeAllTrustedDevices() {
 
 // ── 2FA ──
 async function init2FASetup() {
+    console.log('init2FASetup called');
     try {
         const res = await fetch('/perfil/2fa/setup');
         const data = await res.json();
+        console.log('2FA setup response:', data);
         if (data.success) {
             document.getElementById('twofa-qr-img').src = data.qr_code;
             document.getElementById('twofa-code-input').value = '';
@@ -305,7 +307,7 @@ async function init2FASetup() {
         } else {
             showToast(data.message || 'Error al iniciar 2FA', 'error');
         }
-    } catch { showToast('Error de conexión', 'error'); }
+    } catch (e) { console.error('2FA setup error:', e); showToast('Error de conexión', 'error'); }
 }
 
 async function verify2FACode() {
