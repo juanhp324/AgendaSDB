@@ -92,7 +92,11 @@ def login():
             return render_template('Auth/2FA.html', temp_token=temp_token, email=data.get('email'))
     
     # Generate JWT tokens
-    tokens = current_app.jwt_auth.generate_tokens(userData)
+    try:
+        tokens = current_app.jwt_auth.generate_tokens(userData)
+    except Exception as e:
+        SecureLogger.safe_log(f"Error generando tokens JWT: {str(e)}")
+        return jsonify({"success": False, "message": f"Error al generar sesión: {str(e)}"}), 500
     
     # Set session for gateway compatibility
     session['user_id'] = str(userData['_id'])
