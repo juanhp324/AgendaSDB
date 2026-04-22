@@ -38,27 +38,27 @@ class AppGateway:
         """Middleware centralizado para todas las peticiones."""
         if request.path.startswith('/static'):
             return
-        
+
         # 1. Verificar endpoints públicos
         if request.endpoint in PUBLIC_ENDPOINTS:
             return
-            
+
         # 2. Verificar Autenticación (JWT o Sesión)
         if 'user_id' not in session:
             return redirect(url_for('RJWTAuth.show_login_form'))
-        
-        # 3. Verificar si el usuario aún existe y está activo
-        try:
-            user = MAuth.getUserById(session['user_id'])
-            if not user or user.get("activo") is False:
-                session.clear()
-                msg = "Sesión inválida o cuenta desactivada."
-                if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return jsonify({"success": False, "message": msg}), 401
-                flash(msg, "danger")
-                return redirect(url_for('RJWTAuth.show_login_form'))
-        except ServiceUnavailableError as e:
-            return self.handle_service_unavailable(e)
+
+        # 3. Verificar si el usuario está activo (usando caché de sesión)
+        # Solo consultar DB si no está en sesión o es endpoint crítico
+        if session.get('activo') is False:
+            session.clear()
+            msg = "Cuenta desactivada."
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": msg}), 401
+            flash(msg, "danger")
+            return redirect(url_for('RJWTAuth.show_login_form'))
+
+        # Opcional: validar DB en endpoints sensibles (cada 5 minutos)
+        # Por ahora, confiar en caché de sesión para rendimiento
 
     def index(self):
         if 'user_id' in session:

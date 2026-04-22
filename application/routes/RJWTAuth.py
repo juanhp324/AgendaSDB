@@ -81,6 +81,7 @@ def login():
                 session['nombre'] = userData.get('nombre', 'Usuario')
                 session['rol'] = userData.get('rol', 'user')
                 session['email'] = userData.get('email', '')
+                session['activo'] = userData.get('activo', True)
                 session.permanent = True
                 if request.is_json:
                     return jsonify({"success": True, "access_token": tokens['access_token'],
@@ -127,6 +128,7 @@ def login():
     session['nombre'] = userData.get('nombre', 'Usuario')
     session['rol'] = userData.get('rol', 'user')
     session['email'] = userData.get('email', '')
+    session['activo'] = userData.get('activo', True)
     session.permanent = True
     
     if request.is_json:
