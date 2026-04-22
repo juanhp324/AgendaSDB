@@ -23,8 +23,8 @@ class RedisRateLimiter:
             self.redis_client = redis.from_url(
                 self.redis_url,
                 decode_responses=True,
-                socket_timeout=1.0,
-                socket_connect_timeout=1.0,
+                socket_timeout=3.0,
+                socket_connect_timeout=3.0,
                 retry_on_timeout=False
             )
             # Test connection
