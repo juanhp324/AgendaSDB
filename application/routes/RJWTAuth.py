@@ -14,6 +14,14 @@ def show_login_form():
     """Mostrar formulario de login"""
     return render_template('Auth/Login.html')
 
+@bp.route('/Login/2fa', methods=['GET'])
+def show_2fa_form():
+    """Mostrar página de verificación 2FA con temp_token de query param"""
+    temp_token = request.args.get('t', '')
+    if not temp_token:
+        return redirect(url_for('RJWTAuth.show_login_form'))
+    return render_template('Auth/2FA.html', temp_token=temp_token, email='')
+
 @bp.route('/Login', methods=['POST'])
 def login():
     """Login endpoint - maneja tanto formularios web como JSON"""
@@ -103,7 +111,7 @@ def login():
         )
         
         # Set 2FA pending state
-        TwoFactorSession.set_2fa_pending(request.session, userData)
+        TwoFactorSession.set_2fa_pending(session, userData)
         
         if request.is_json:
             return jsonify({

@@ -184,6 +184,31 @@ async function handleLogin(e) {
 
         const data = await res.json();
         if (data.success) {
+            // 2FA required — submit to the 2FA page via form POST
+            if (data.requires_2fa && data.temp_token) {
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Login';
+                const addField = (name, value) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    form.appendChild(input);
+                };
+                addField('temp_token', data.temp_token);
+                addField('2fa_token', '__redirect__');
+                addField('csrf_token', csrf);
+                document.body.appendChild(form);
+                // Actually just redirect to a dedicated 2FA page
+                // Since we can't render a template here, store temp_token and redirect
+                sessionStorage.setItem('pending_2fa_token', data.temp_token);
+                sessionStorage.setItem('pending_2fa_email', email);
+                window.location.href = '/Login/2fa?t=' + encodeURIComponent(data.temp_token);
+                return;
+            }
             if (remember) {
                 let sessions = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
                 sessions = sessions.filter(s => s.email !== email);
