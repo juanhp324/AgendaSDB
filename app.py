@@ -32,6 +32,7 @@ jwt_auth = init_jwt_auth(app)
 from application.routes.RInicio import bp as RInicio_bp
 from application.routes.RCasas import bp as RCasas_bp
 from application.routes.RUsuarios import bp as RUsuarios_bp
+from application.routes.RDerechos import bp as RDerechos_bp
 from domain.VAuth import AppGateway
 
 # Register JWT authentication blueprint
@@ -42,6 +43,7 @@ app.register_blueprint(RJWTAuth_bp)
 app.register_blueprint(RInicio_bp)
 app.register_blueprint(RCasas_bp)
 app.register_blueprint(RUsuarios_bp)
+app.register_blueprint(RDerechos_bp)
 
 # Iniciar Pasarela de Aplicación
 AppGateway(app)

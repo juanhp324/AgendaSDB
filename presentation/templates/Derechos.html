@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block title %}Derechos y Créditos — Agenda CÓNDOR{% endblock %}
+
+{% block content %}
+<style>
+  .rights-hero {
+    text-align: center;
+    padding: 64px 24px 48px;
+  }
+  .rights-hero .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(220,30,70,0.2);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .rights-hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .rights-hero h1 span {
+    background: linear-gradient(135deg, var(--primary), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .rights-hero p {
+    font-size: 1.1rem;
+    color: var(--text-2);
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .rights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+
+  .rights-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .rights-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  .rights-card .card-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    font-size: 1.4rem;
+  }
+  .rights-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .rights-card p, .rights-card li {
+    font-size: 0.88rem;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+  .rights-card ul { list-style: none; padding: 0; }
+  .rights-card ul li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rights-card ul li:last-child { border-bottom: none; }
+  .rights-card ul li::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .brand-center {
+    text-align: center;
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+  .brand-box {
+    background: linear-gradient(135deg, var(--secondary) 0%, #1e1b4b 100%);
+    border-radius: var(--radius);
+    padding: 48px 36px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-box::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(220,30,70,0.15);
+  }
+  .brand-box::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(220,30,70,0.1);
+  }
+  .brand-logo {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+  }
+  .brand-logo .red { color: var(--primary); }
+  .brand-tagline {
+    font-size: 0.95rem;
+    opacity: 0.75;
+    margin-bottom: 24px;
+    position: relative; z-index: 1;
+  }
+  .brand-badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .brand-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    backdrop-filter: blur(8px);
+  }
+
+  .copyright-strip {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-3);
+    font-size: 0.83rem;
+    border-top: 1px solid var(--border);
+    max-width: 1100px;
+    margin: 0 auto 48px;
+  }
+  .copyright-strip strong { color: var(--primary); }
+</style>
+
+<!-- Hero -->
+<div class="rights-hero" data-aos="fade-up">
+  <div class="badge-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Derechos y Créditos
+  </div>
+  <h1>Desarrollado por <span>RespawnRD</span></h1>
+  <p>Agenda CÓNDOR es un sistema de gestión de directorio institucional diseñado y desarrollado íntegramente por RespawnRD.</p>
+</div>
+
+<!-- Cards grid -->
+<div class="rights-grid">
+
+  <!-- Propiedad intelectual -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="50">
+    <div class="card-icon">⚖️</div>
+    <h3>Propiedad Intelectual</h3>
+    <p>
+      Todo el código fuente, diseño, arquitectura y lógica de negocio de <strong>Agenda CÓNDOR</strong>
+      son propiedad exclusiva de <strong>RespawnRD</strong>. Queda prohibida su reproducción total o parcial
+      sin autorización expresa por escrito.
+    </p>
+  </div>
+
+  <!-- Tecnologías -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="100">
+    <div class="card-icon">🛠️</div>
+    <h3>Stack Tecnológico</h3>
+    <ul>
+      <li>Python · Flask (Backend)</li>
+      <li>MongoDB (Base de datos)</li>
+      <li>Redis / Upstash (Caché y rate limiting)</li>
+      <li>JWT + Sesiones (Autenticación)</li>
+      <li>TOTP · pyotp (Autenticación 2FA)</li>
+      <li>Render (Infraestructura cloud)</li>
+      <li>Sentry (Monitoreo y errores)</li>
+    </ul>
+  </div>
+
+  <!-- Seguridad -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="150">
+    <div class="card-icon">🔐</div>
+    <h3>Seguridad</h3>
+    <ul>
+      <li>Cifrado de extremo a extremo (Fernet)</li>
+      <li>Protección CSRF en todos los endpoints</li>
+      <li>Rate limiting distribuido</li>
+      <li>Autenticación de dos factores (2FA)</li>
+      <li>Dispositivos de confianza</li>
+      <li>Content Security Policy (CSP)</li>
+      <li>HSTS + Headers de seguridad</li>
+    </ul>
+  </div>
+
+  <!-- Librerías UI -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="200">
+    <div class="card-icon">🎨</div>
+    <h3>Librerías de Interfaz</h3>
+    <ul>
+      <li>AOS — Animaciones al desplazar</li>
+      <li>SweetAlert2 — Diálogos y alertas</li>
+      <li>Toastify.js — Notificaciones</li>
+      <li>Particles.js — Fondo animado</li>
+      <li>Vanilla-Tilt — Efectos de tilt</li>
+      <li>Animate.css — Animaciones CSS</li>
+      <li>Google Fonts · Inter</li>
+    </ul>
+  </div>
+
+  <!-- Uso aceptable -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="250">
+    <div class="card-icon">📋</div>
+    <h3>Uso Aceptable</h3>
+    <p>
+      Este sistema es de uso <strong>exclusivo</strong> para personal autorizado de CÓNDOR filial La Vega.
+      El acceso no autorizado, la manipulación de datos o el uso indebido de las credenciales está
+      estrictamente prohibido y puede conllevar consecuencias legales.
+    </p>
+  </div>
+
+  <!-- Contacto -->
+  <div class="rights-card" data-aos="fade-up" data-aos-delay="300">
+    <div class="card-icon">📬</div>
+    <h3>Contacto</h3>
+    <p>
+      Para soporte técnico, reportar vulnerabilidades o solicitar información sobre el sistema,
+      comunícate directamente con <strong>RespawnRD</strong>.
+    </p>
+    <br>
+    <p style="font-size:0.8rem;color:var(--text-3)">
+      Versión del sistema: <strong style="color:var(--text-2)">1.0.0</strong><br>
+      Año de desarrollo: <strong style="color:var(--text-2)">2025 – 2026</strong>
+    </p>
+  </div>
+
+</div>
+
+<!-- Brand block -->
+<div class="brand-center" data-aos="fade-up">
+  <div class="brand-box">
+    <div class="brand-logo">Respawn<span class="red">RD</span></div>
+    <div class="brand-tagline">Soluciones digitales a medida · República Dominicana</div>
+    <div class="brand-badges">
+      <span class="brand-badge">🇩🇴 Hecho en RD</span>
+      <span class="brand-badge">⚡ Full-Stack</span>
+      <span class="brand-badge">🔒 Security-First</span>
+      <span class="brand-badge">☁️ Cloud Ready</span>
+    </div>
+  </div>
+</div>
+
+<!-- Copyright -->
+<div class="copyright-strip">
+  © 2026 <strong>RespawnRD</strong>. Todos los derechos reservados. · Agenda CÓNDOR
+</div>
+
+{% endblock %}

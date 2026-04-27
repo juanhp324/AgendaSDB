@@ -79,6 +79,12 @@
         Gestionar Usuarios
       </a>
       {% endif %}
+      <a class="dropdown-item" href="{{ url_for('RDerechos.derechos') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Derechos y Créditos
+      </a>
       <div class="dropdown-divider"></div>
       <a class="dropdown-item danger" href="{{ url_for('RJWTAuth.logout') }}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
