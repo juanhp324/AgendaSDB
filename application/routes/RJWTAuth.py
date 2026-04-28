@@ -158,11 +158,6 @@ def jwt_login():
     
     data = request.get_json(silent=True)
     
-    # Check if this is 2FA verification
-    if data and data.get('2fa_token') and data.get('temp_token'):
-        return verify_jwt_2fa(data)
-    
-    # Regular login flow
     login = VAuth.loginValidator(is_json=True, payLoad=data)
     try:
         userData = login.validation()
@@ -173,28 +168,6 @@ def jwt_login():
     except PermissionError as exc:
         return jsonify({"message": str(exc)}), 401
 
-    # Check if user has 2FA enabled
-    if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
-        # Generate temporary token for 2FA verification
-        import jwt as pyjwt
-        from datetime import datetime, timedelta
-        temp_token = pyjwt.encode(
-            {
-                'user_id': str(userData['_id']),
-                'type': 'temp_2fa',
-                'exp': datetime.utcnow() + timedelta(minutes=5)
-            },
-            current_app.secret_key,
-            algorithm='HS256'
-        )
-        
-        return jsonify({
-            "success": True,
-            "requires_2fa": True,
-            "temp_token": temp_token,
-            "message": "Se requiere verificación de dos factores"
-        }), 200
-    
     # Generate JWT tokens
     jwt_auth = current_app.jwt_auth
     tokens = jwt_auth.generate_tokens(userData)

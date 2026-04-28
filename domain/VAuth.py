@@ -43,7 +43,11 @@ class AppGateway:
         if request.endpoint in PUBLIC_ENDPOINTS:
             return
 
-        # 2. Verificar Autenticación (JWT o Sesión)
+        # 2. Rutas /api/ usan JWT — tienen su propio @jwt_required que devuelve 401 JSON
+        if request.path.startswith('/api/'):
+            return
+
+        # 3. Verificar Autenticación (JWT o Sesión)
         if 'user_id' not in session:
             return redirect(url_for('RJWTAuth.show_login_form'))
 

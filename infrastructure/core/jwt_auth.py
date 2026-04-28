@@ -115,25 +115,7 @@ class JWTAuth:
         if not user:
             return None
         
-        # Generate new access token
-        now = datetime.datetime.utcnow()
-        access_payload = {
-            'user_id': str(user['_id']),
-            'email': user['email'],
-            'rol': user.get('rol', 'user'),
-            'nombre': user.get('nombre', 'Usuario'),
-            'iat': now,
-            'exp': now + datetime.timedelta(hours=1),
-            'type': 'access'
-        }
-        
-        access_token = jwt.encode(access_payload, self.secret_key, algorithm=self.algorithm)
-        
-        return {
-            'access_token': access_token,
-            'token_type': 'Bearer',
-            'expires_in': 3600
-        }
+        return self.generate_tokens(user)
     
     def revoke_token(self, token):
         """
@@ -165,6 +147,9 @@ def jwt_required(f):
         
         if not token:
             return jsonify({'message': 'Token is missing'}), 401
+        
+        if is_token_blacklisted(token):
+            return jsonify({'message': 'Token has been revoked'}), 401
         
         # Verify token
         jwt_auth = current_app.jwt_auth

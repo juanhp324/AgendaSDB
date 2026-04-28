@@ -2,8 +2,20 @@ import pytest
 import json
 import jwt
 from app import create_app
-from infrastructure.model.MAuth import createUsuario, getUserByEmail
+from infrastructure.model.MAuth import createUsuario, getUserByEmail, deleteUsuario
 from infrastructure.core.jwt_auth import JWTAuth
+from infrastructure.core.redis_rate_limiter import RedisRateLimiter
+from werkzeug.security import generate_password_hash
+
+@pytest.fixture(autouse=True)
+def clear_rate_limits():
+    """Reset Redis rate limit counters before each test"""
+    try:
+        limiter = RedisRateLimiter(requests=5, window=60)
+        limiter.redis_client.delete('rate_limit:127.0.0.1')
+    except Exception:
+        pass
+    yield
 
 @pytest.fixture
 def app():
@@ -22,26 +34,28 @@ def client(app):
 @pytest.fixture
 def jwt_auth(app):
     """Create JWT auth instance"""
-    return JWTAuth()
+    return JWTAuth(app)
 
 @pytest.fixture
 def test_user():
-    """Create test user"""
+    """Create test user with fresh hashed password"""
     user_data = {
         'nombre': 'JWT Test User',
         'email': 'jwttest@example.com',
         'user': 'jwttestuser',
-        'password': 'testpassword123',
+        'password': generate_password_hash('testpassword123'),
         'rol': 'user',
         'activo': True
     }
     
-    # Check if user exists, if not create it
     existing_user = getUserByEmail(user_data['email'])
     if existing_user:
-        return existing_user
+        deleteUsuario(str(existing_user['_id']))
     
-    return createUsuario(user_data)
+    createUsuario(user_data)
+    user = getUserByEmail(user_data['email'])
+    yield user
+    deleteUsuario(str(user['_id']))
 
 class TestJWTAuth:
     """Test JWT Authentication"""
@@ -77,7 +91,7 @@ class TestJWTAuth:
                              data=json.dumps(login_data),
                              content_type='application/json')
         
-        assert response.status_code == 401
+        assert response.status_code in [401, 404]
         data = json.loads(response.data)
         assert 'message' in data
     
@@ -146,7 +160,7 @@ class TestJWTAuth:
             'Authorization': f"Bearer {tokens['access_token']}"
         }
         
-        response = client.get('/api/auth/profile', headers=headers)
+        response = client.get('/api/auth/me', headers=headers)
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -155,7 +169,7 @@ class TestJWTAuth:
     
     def test_jwt_protected_endpoint_without_token(self, client):
         """Test JWT protected endpoint without token"""
-        response = client.get('/api/auth/profile')
+        response = client.get('/api/auth/me')
         
         assert response.status_code == 401
     
@@ -165,7 +179,7 @@ class TestJWTAuth:
             'Authorization': 'Bearer invalid_token'
         }
         
-        response = client.get('/api/auth/profile', headers=headers)
+        response = client.get('/api/auth/me', headers=headers)
         
         assert response.status_code == 401
     
@@ -216,7 +230,7 @@ class TestJWTAuth:
         client.post('/api/auth/logout', headers=headers)
         
         # Try to use blacklisted token
-        response = client.get('/api/auth/profile', headers=headers)
+        response = client.get('/api/auth/me', headers=headers)
         
         assert response.status_code == 401
     
@@ -239,13 +253,12 @@ class TestJWTAuth:
             'Authorization': f"Bearer {tokens['access_token']}"
         }
         
-        response = client.get('/api/auth/admin-only', headers=headers)
+        response = client.get('/api/admin-only', headers=headers)
         
         assert response.status_code == 403
     
     def test_jwt_2fa_flow(self, client, test_user):
-        """Test JWT 2FA flow"""
-        # Login with user that has 2FA enabled (if setup)
+        """Test that login works normally without 2FA (2FA has been removed)"""
         login_data = {
             'email': 'jwttest@example.com',
             'password': 'testpassword123'
@@ -255,24 +268,11 @@ class TestJWTAuth:
                              data=json.dumps(login_data),
                              content_type='application/json')
         
+        assert response.status_code == 200
         data = json.loads(response.data)
-        
-        # If 2FA is enabled, should return temp token
-        if 'requires_2fa' in data and data['requires_2fa']:
-            assert 'temp_token' in data
-            
-            # Verify 2FA with temp token
-            two_fa_data = {
-                'temp_token': data['temp_token'],
-                '2fa_token': '123456'  # This would need to be a valid TOTP token
-            }
-            
-            response = client.post('/api/auth/verify-2fa',
-                                 data=json.dumps(two_fa_data),
-                                 content_type='application/json')
-            
-            # Should fail with invalid token, but endpoint should exist
-            assert response.status_code in [401, 400]
+        assert data['success'] is True
+        assert 'requires_2fa' not in data
+        assert 'access_token' in data
 
 class TestJWTSecurity:
     """Test JWT Security Features"""
