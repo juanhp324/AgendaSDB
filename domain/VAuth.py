@@ -2,7 +2,7 @@ import infrastructure.model.MAuth as MAuth
 from flask import url_for, redirect, session, request, flash, jsonify, render_template
 from werkzeug.security import check_password_hash
 
-PUBLIC_ENDPOINTS = ['RJWTAuth.show_login_form', 'RJWTAuth.show_2fa_form', 'RJWTAuth.login', 'RJWTAuth.logout']
+PUBLIC_ENDPOINTS = ['RJWTAuth.show_login_form', 'RJWTAuth.login', 'RJWTAuth.logout']
 PROTECTED_ENDPOINTS = [
     'RInicio.inicio',
     'RCasas.casas', 'RCasas.get_casas', 'RCasas.get_casa',
@@ -11,7 +11,6 @@ PROTECTED_ENDPOINTS = [
     'RUsuarios.delete_usuario', 'RUsuarios.create_usuario',
     'RJWTAuth.update_profile_jwt', 'RJWTAuth.get_current_user',
     'RJWTAuth.get_perfil', 'RJWTAuth.update_perfil',
-    'RJWTAuth.perfil_2fa_setup', 'RJWTAuth.perfil_2fa_enable', 'RJWTAuth.perfil_2fa_disable',
     'RDerechos.derechos',
 ]
 
