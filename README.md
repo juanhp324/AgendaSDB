@@ -25,7 +25,7 @@
   - Generación de **PDF** de alta calidad con `fpdf2`.
   - Generación de documentos **Word (.docx)** profesionales con `python-docx`.
 - **Interfaz Premium & Dark Mode**: Diseño basado en *Glassmorphism* con animaciones orgánicas y adaptabilidad total al tema del sistema.
-- **Seguridad Enterprise**: JWT authentication, 2FA, rate limiting, headers de seguridad.
+- **Seguridad Enterprise**: JWT authentication, rate limiting, CSRF protection, headers de seguridad.
 - **Resiliencia & Monitoreo**: Protecciones avanzadas contra fallos con Sentry integrado.
 
 ## Resiliencia y Seguridad
@@ -46,7 +46,7 @@ El sistema implementa patrones de diseño modernos para garantizar la disponibil
 *   **Frontend**: CSS3 Vanilla (Variables CSS), HTML5 Semántico, JS Moderno.
 *   **Reportes**: `fpdf2` y `python-docx`.
 *   **Monitoreo**: Sentry.io
-*   **Autenticación**: JWT + 2FA (TOTP) con Fernet encryption
+*   **Autenticación**: JWT (access token 15min + refresh token 30d)
 
 ## :construction: Instalación y Despliegue Local
 
@@ -103,16 +103,13 @@ El sistema ha sido completamente reforzado con **seguridad de grado empresarial*
 
 ### :gear: Mejoras de Seguridad Implementadas
 - **Rate Limiting Distribuido**: Redis-based con fallback a memoria
-- **Autenticación 2FA**: TOTP compatible con Google Authenticator
-- **JWT Authentication**: Tokens de acceso (15min) + refresh (30d) para APIs
-- **2FA Secrets Encriptados**: Fernet encryption para secrets en reposo
+- **JWT Authentication**: Tokens de acceso (15min) + refresh (30d)
 - **Headers de Seguridad**: CSP, HSTS, XSS protection, anti-clickjacking
 - **Monitoreo Sentry**: Tracking de errores y rendimiento
 - **Pruebas Automatizadas**: Suite completa con 80%+ cobertura
 
 ### :lock: Características de Seguridad
 - **JWT-Only Authentication**: Sistema unificado stateless y escalable
-- **Password Verification**: Requerida para operaciones críticas (2FA setup/disable)
 - **Protección CSRF**: Tokens por sesión para cambios de estado
 - **Rate Limiting**: 5 intentos por minuto en login, 10 en refresh
 - **Control de Acceso**: RBAC con roles (user, admin, superadmin)
@@ -135,20 +132,16 @@ AgendaSDB/
 
 #### Autenticación JWT (Único Sistema)
 1. **Login**: POST a `/Login` con credenciales (web o JSON)
-2. **2FA**: Si está habilitado, requiere código de 6 dígitos
-3. **Tokens**: Access token (15min) + refresh token (30d) emitidos
-4. **Acceso**: Bearer token en header para APIs, cookies para web
+2. **Tokens**: Access token (15min) + refresh token (30d) emitidos
+3. **Acceso**: Bearer token en header para APIs, cookies para web
 
-#### Endpoints de 2FA
-- **Setup 2FA**: `/api/auth/setup-2fa` - Requiere verificación de contraseña
-- **Verify Setup**: `/api/auth/verify-2fa-setup` - Habilita 2FA con código
-- **Disable 2FA**: `/api/auth/disable-2fa` - Requiere verificación de contraseña
-- **Status**: `/api/auth/2fa-status` - Consultar estado actual
+#### Endpoints Principales
+- **Login**: `POST /Login`
+- **Refresh**: `POST /api/auth/refresh`
+- **Logout**: `POST /api/auth/logout`
 
 #### Características de Seguridad
-- **Password Verification**: Obligatoria para setup/disable 2FA
-- **Secrets Encriptados**: Fernet encryption en reposo
-- **Rate Limiting**: Protección contra fuerza bruta
+- **Rate Limiting**: Protección contra fuerza bruta en todos los endpoints
 - **JWT Stateless**: Escalable y distribuido
 
 ### :test_suite: Pruebas y Calidad
@@ -191,7 +184,7 @@ SENTRY_DSN=https://your-sentry-dsn
 python -c 'import secrets; print(secrets.token_hex(32))'
 
 # Verificar instalación de dependencias
-pip list | grep -E "(redis|jwt|pyotp|sentry|pytest)"
+pip list | grep -E "(redis|jwt|sentry|pytest)"
 
 # Ejecutar pruebas con cobertura
 pytest tests/ --cov=. --cov-fail-under=80
@@ -203,7 +196,6 @@ FLASK_ENV=production python app.py
 ## :warning: Consideraciones de Seguridad
 
 - **Nunca** usar `agenda_secret_key_2024` como SECRET_KEY
-- **Siempre** habilitar 2FA para usuarios administrativos
 - **Configurar** Redis en producción para rate limiting distribuido
 - **Monitorear** errores a través de Sentry
 - **Mantener** dependencias actualizadas regularmente

@@ -42,17 +42,10 @@ class SwaggerConfig:
                 - `POST /api/auth/refresh` - Renovar access token
                 - `POST /api/auth/logout` - Cerrar sesión
                 
-                ### Endpoints de 2FA
-                - `POST /api/auth/setup-2fa` - Configurar 2FA (requiere password)
-                - `POST /api/auth/verify-2fa-setup` - Verificar y habilitar 2FA
-                - `POST /api/auth/disable-2fa` - Desactivar 2FA (requiere password)
-                - `GET /api/auth/2fa-status` - Estado de 2FA
-                
                 ### Seguridad
                 - Rate limiting distribuido con Redis
-                - Password verification obligatoria para operaciones críticas
-                - 2FA secrets encriptados con Fernet
                 - Headers de seguridad HTTP (CSP, HSTS, etc.)
+                - CSRF protection en todos los endpoints de estado
                 - Logging contextual y seguro
                 
                 ### Errores
@@ -138,10 +131,6 @@ class SwaggerConfig:
                                     "type": "boolean",
                                     "description": "Estado del usuario"
                                 },
-                                "2fa_enabled": {
-                                    "type": "boolean",
-                                    "description": "2FA habilitado"
-                                }
                             }
                         },
                         "LoginRequest": {
@@ -204,57 +193,6 @@ class SwaggerConfig:
                                 }
                             }
                         },
-                        "TwoFASetupRequest": {
-                            "type": "object",
-                            "required": ["password"],
-                            "properties": {
-                                "password": {
-                                    "type": "string",
-                                    "description": "Contraseña actual del usuario (requerida para seguridad)"
-                                }
-                            }
-                        },
-                        "TwoFASetupResponse": {
-                            "type": "object",
-                            "properties": {
-                                "success": {
-                                    "type": "boolean"
-                                },
-                                "qr_code": {
-                                    "type": "string",
-                                    "description": "QR code en base64 para escanear"
-                                },
-                                "secret": {
-                                    "type": "string",
-                                    "description": "Secret TOTP (mostrar solo una vez)"
-                                },
-                                "message": {
-                                    "type": "string",
-                                    "description": "Mensaje de instrucciones"
-                                }
-                            }
-                        },
-                        "TwoFAVerifyRequest": {
-                            "type": "object",
-                            "required": ["code"],
-                            "properties": {
-                                "code": {
-                                    "type": "string",
-                                    "pattern": "^[0-9]{6}$",
-                                    "description": "Código de 6 dígitos del authenticator"
-                                }
-                            }
-                        },
-                        "TwoFADisableRequest": {
-                            "type": "object",
-                            "required": ["password"],
-                            "properties": {
-                                "password": {
-                                    "type": "string",
-                                    "description": "Contraseña actual (requerida para desactivar 2FA)"
-                                }
-                            }
-                        },
                         "ErrorResponse": {
                             "type": "object",
                             "properties": {
@@ -265,25 +203,6 @@ class SwaggerConfig:
                                 "message": {
                                     "type": "string",
                                     "description": "Mensaje de error"
-                                }
-                            }
-                        },
-                        "TwoFactorSetup": {
-                            "type": "object",
-                            "properties": {
-                                "success": {
-                                    "type": "boolean"
-                                },
-                                "qr_code": {
-                                    "type": "string",
-                                    "description": "QR Code en base64"
-                                },
-                                "secret": {
-                                    "type": "string",
-                                    "description": "Secret TOTP (mostrado solo una vez)"
-                                },
-                                "message": {
-                                    "type": "string"
                                 }
                             }
                         },
