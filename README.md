@@ -144,19 +144,58 @@ AgendaSDB/
 - **Rate Limiting**: Protección contra fuerza bruta en todos los endpoints
 - **JWT Stateless**: Escalable y distribuido
 
-### :test_suite: Pruebas y Calidad
+### :test_tube: Testing & CI/CD
 
-Ejecutar el suite de pruebas completo:
+#### Suite de Pruebas (73 tests, 78% coverage)
+
+**Tests Unitarios e Integración** (`pytest tests/` — ~10s):
 ```bash
-# Instalar dependencias de prueba
+# Instalar dependencias
 pip install pytest pytest-cov pytest-flask
 
-# Ejecutar todas las pruebas
-pytest tests/ --verbose --cov=. --cov-report=html
+# Ejecutar suite completo (33 → 73 tests)
+pytest tests/ -v --cov-fail-under=70
 
-# Ejecutar solo pruebas de seguridad
-pytest tests/test_security.py --cov=infrastructure.core
+# Por categoría
+pytest tests/test_auth.py -v        # Autenticación (login, sesión, perfil)
+pytest tests/test_jwt.py -v         # JWT (tokens, refresh, blacklist, RBAC)
+pytest tests/test_security.py -v    # Seguridad (CSRF, rate limiting, circuit breaker)
+pytest tests/test_casas.py -v       # Routes de casas y usuarios (CRUD + permisos)
 ```
+
+**Tests E2E con Playwright** (`pytest tests/test_e2e.py` — ~35s):
+```bash
+# Instalar Playwright
+pip install playwright pytest-playwright
+python -m playwright install chromium
+
+# Ejecutar tests E2E (15 tests de navegador)
+pytest tests/test_e2e.py -v
+
+# Con navegador visible
+pytest tests/test_e2e.py -v --headed
+```
+
+**Cobertura de Tests:**
+- `test_auth.py`: Login, logout, perfil, rate limiting, casos edge parametrizados
+- `test_jwt.py`: JWT login, refresh, blacklist, RBAC, rate limiting API
+- `test_security.py`: CircuitBreaker, CSRF, RateLimiter, SecureLogger
+- `test_casas.py`: CRUD casas/usuarios, permisos por rol, validaciones parametrizadas
+- `test_e2e.py`: Flujos de usuario reales (login, navbar, modal perfil, logout)
+
+#### GitHub Actions CI/CD
+
+Cada `git push` a `main` ejecuta automáticamente:
+
+```yaml
+✅ Unit & Integration Tests (73 tests, coverage ≥ 70%)
+✅ E2E Browser Tests (15 tests con Chromium)
+```
+
+**Branch Protection configurado:**
+- ❌ No se puede hacer merge si los tests fallan
+- ✅ Render solo despliega código que pasó los tests
+- 🔒 Requiere Pull Request + status checks aprobados
 
 ### :rocket: Despliegue en Producción
 
