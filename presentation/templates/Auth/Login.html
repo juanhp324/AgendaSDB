@@ -14,6 +14,120 @@
 
 <body class="auth-page">
 
+  <!-- Loading overlay -->
+  <div id="loginLoadingOverlay" aria-hidden="true">
+    <div class="llo-backdrop"></div>
+    <div class="llo-card">
+      <div class="llo-logo">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="llo-spinner">
+        <svg viewBox="0 0 50 50" class="llo-circle">
+          <circle cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
+        </svg>
+      </div>
+      <p class="llo-title">Iniciando sesión</p>
+      <p class="llo-sub">Verificando credenciales<span class="llo-dots"><span>.</span><span>.</span><span>.</span></span></p>
+    </div>
+  </div>
+
+  <style>
+    #loginLoadingOverlay {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .35s ease;
+    }
+    #loginLoadingOverlay.visible {
+      opacity: 1; pointer-events: all;
+    }
+    .llo-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(15, 23, 42, .55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .llo-card {
+      position: relative;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 24px;
+      padding: 44px 52px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.18);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      transform: translateY(12px);
+      transition: transform .4s cubic-bezier(.22,1,.36,1);
+    }
+    #loginLoadingOverlay.visible .llo-card {
+      transform: translateY(0);
+    }
+    .llo-logo {
+      width: 64px; height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px;
+      box-shadow: 0 8px 24px rgba(102,126,234,.45);
+      color: #fff;
+    }
+    .llo-spinner {
+      width: 56px; height: 56px;
+      margin: 0 auto 20px;
+    }
+    .llo-circle {
+      width: 100%; height: 100%;
+      animation: llo-rotate 1.4s linear infinite;
+    }
+    .llo-circle circle {
+      stroke: url(#lloGrad);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 60;
+      stroke-linecap: round;
+      animation: llo-dash 1.4s ease-in-out infinite;
+    }
+    @keyframes llo-rotate { 100% { transform: rotate(360deg); } }
+    @keyframes llo-dash {
+      0%   { stroke-dashoffset: 100; }
+      50%  { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 100; }
+    }
+    .llo-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.15rem; font-weight: 700;
+      color: #fff; margin: 0 0 6px;
+      letter-spacing: -.01em;
+    }
+    .llo-sub {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: .85rem; color: rgba(255,255,255,.65);
+      margin: 0;
+    }
+    .llo-dots span {
+      display: inline-block;
+      animation: llo-blink 1.4s infinite both;
+    }
+    .llo-dots span:nth-child(2) { animation-delay: .2s; }
+    .llo-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes llo-blink {
+      0%, 80%, 100% { opacity: 0; }
+      40%            { opacity: 1; }
+    }
+  </style>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="lloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#667eea"/>
+        <stop offset="100%" stop-color="#764ba2"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
   <!-- Floating theme toggle for login page -->
   <button id="themeToggle" class="theme-btn theme-btn-float" onclick="toggleTheme()" title="Cambiar tema">
     <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>

@@ -195,7 +195,12 @@ async function handleLogin(e) {
                 });
                 localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions.slice(0, 3)));
             }
-            window.location.href = data.redirect;
+            const overlay = document.getElementById('loginLoadingOverlay');
+            if (overlay) {
+                overlay.removeAttribute('aria-hidden');
+                overlay.classList.add('visible');
+            }
+            setTimeout(() => { window.location.href = data.redirect; }, 900);
         } else {
             errorMsg.textContent = data.message || 'Credenciales incorrectas';
             errorMsg.style.display = 'block';
