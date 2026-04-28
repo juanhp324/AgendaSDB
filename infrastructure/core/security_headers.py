@@ -75,7 +75,6 @@ class SecurityHeaders:
             "magnetometer=()",
             "gyroscope=()",
             "accelerometer=()",
-            "ambient-light-sensor=()",
             "autoplay=()",
             "encrypted-media=()",
             "fullscreen=()",
