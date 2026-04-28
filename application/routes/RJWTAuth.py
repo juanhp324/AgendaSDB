@@ -111,7 +111,7 @@ def login():
         )
         
         # Set 2FA pending state
-        TwoFactorSession.set_2fa_pending(session, userData)
+        TwoFactorSession.set_2fa_pending(session, str(userData['_id']), userData)
         
         if request.is_json:
             return jsonify({
