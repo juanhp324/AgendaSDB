@@ -1,6 +1,7 @@
 import pytest
 import json
 from app import create_app
+from bson import ObjectId
 from infrastructure.model.MAuth import createUsuario, getUserByEmail, deleteUsuario
 from werkzeug.security import generate_password_hash
 from infrastructure.core.redis_rate_limiter import RedisRateLimiter
@@ -208,3 +209,60 @@ class TestSecurity:
             assert 'user_id' in sess
             assert 'email' in sess
             assert 'rol' in sess
+
+
+class TestLoginParametrizado:
+    """Casos edge del login cubiertos con @pytest.mark.parametrize"""
+
+    @pytest.mark.parametrize("payload,expected_status", [
+        # --- Campos faltantes / vacíos ---
+        ({},                                                    400),  # sin email ni password
+        ({'email': 'test@example.com'},                         400),  # sin password
+        ({'password': 'testpassword123'},                       400),  # sin email
+        ({'email': '', 'password': 'testpassword123'},          400),  # email vacío
+        ({'email': 'test@example.com', 'password': ''},         400),  # password vacío
+        # --- Usuario no existe ---
+        ({'email': 'noexiste@example.com', 'password': 'x'},   404),
+        # --- Email en formato inválido: pasa validación de campos pero no encuentra usuario ---
+        ({'email': 'no-es-email', 'password': 'pass'},          404),
+    ])
+    def test_login_casos_invalidos(self, client, payload, expected_status):
+        """El login rechaza payloads inválidos con el status correcto"""
+        r = client.post('/Login',
+                        data=json.dumps(payload),
+                        content_type='application/json')
+        assert r.status_code == expected_status
+        data = json.loads(r.data)
+        assert 'message' in data
+
+    def test_login_password_incorrecta(self, client, test_user):
+        """Contraseña incorrecta para usuario existente devuelve 401"""
+        r = client.post('/Login',
+                        data=json.dumps({'email': 'test@example.com', 'password': 'incorrecta'}),
+                        content_type='application/json')
+        assert r.status_code == 401
+        data = json.loads(r.data)
+        assert 'message' in data
+
+    def test_login_usuario_inactivo(self, client, app):
+        """Usuario con activo=False no puede iniciar sesión"""
+        user_data = {
+            'nombre': 'Inactivo User',
+            'email': 'inactivo@test.com',
+            'user': 'inactivouser',
+            'password': generate_password_hash('pass123'),
+            'rol': 'user',
+            'activo': False,
+        }
+        existing = getUserByEmail(user_data['email'])
+        if existing:
+            deleteUsuario(str(existing['_id']))
+        result = createUsuario(user_data)
+
+        with app.test_client() as c:
+            r = c.post('/Login',
+                       data=json.dumps({'email': 'inactivo@test.com', 'password': 'pass123'}),
+                       content_type='application/json')
+            assert r.status_code == 401
+
+        deleteUsuario(str(result.inserted_id))
