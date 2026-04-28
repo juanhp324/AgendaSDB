@@ -2,9 +2,6 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 import infrastructure.model.MAuth as MAuth
 import domain.VAuth as VAuth
 from infrastructure.core.jwt_auth import jwt_required, role_required, blacklist_token
-from infrastructure.core.two_factor import TwoFactorAuth, TwoFactorSession, TrustedDeviceManager, MAX_2FA_ATTEMPTS
-from infrastructure.core.encryption import get_encryption_manager
-from werkzeug.security import check_password_hash
 from infrastructure.core.safety import SecureLogger
 
 bp = Blueprint('RJWTAuth', __name__)
@@ -14,13 +11,6 @@ def show_login_form():
     """Mostrar formulario de login"""
     return render_template('Auth/Login.html')
 
-@bp.route('/Login/2fa', methods=['GET'])
-def show_2fa_form():
-    """Mostrar página de verificación 2FA con temp_token de query param"""
-    temp_token = request.args.get('t', '')
-    if not temp_token:
-        return redirect(url_for('RJWTAuth.show_login_form'))
-    return render_template('Auth/2FA.html', temp_token=temp_token, email='')
 
 @bp.route('/Login', methods=['POST'])
 def login():
@@ -43,15 +33,8 @@ def login():
         data = {
             'email': request.form.get('email', ''),
             'password': request.form.get('password', ''),
-            'remember': request.form.get('remember') == 'on',
-            '2fa_token': request.form.get('2fa_token', ''),
-            'temp_token': request.form.get('temp_token', ''),
-            'remember_device': request.form.get('remember_device') == 'on'
+            'remember': request.form.get('remember') == 'on'
         }
-    
-    # Check if this is 2FA verification
-    if data and data.get('2fa_token') and data.get('temp_token'):
-        return verify_2fa(data)
     
     # Regular login flow
     login = VAuth.loginValidator(is_json=request.is_json, payLoad=data)
@@ -73,57 +56,6 @@ def login():
         else:
             return render_template('Auth/Login.html', error=str(exc))
 
-    # Check if user has 2FA enabled
-    if userData.get('2fa_enabled', False) and userData.get('2fa_secret'):
-        # Check trusted device cookie — skip 2FA if device is known
-        td_cookie = request.cookies.get(TrustedDeviceManager.COOKIE_NAME)
-        if td_cookie:
-            td_list = MAuth.getTrustedDevices(str(userData['_id']))
-            if TrustedDeviceManager.verify(td_cookie, td_list):
-                # Trusted device — complete login without 2FA
-                try:
-                    tokens = current_app.jwt_auth.generate_tokens(userData)
-                except Exception as e:
-                    return jsonify({"success": False, "message": f"Error al generar sesión: {str(e)}"}), 500
-                session['user_id'] = str(userData['_id'])
-                session['nombre'] = userData.get('nombre', 'Usuario')
-                session['rol'] = userData.get('rol', 'user')
-                session['email'] = userData.get('email', '')
-                session['activo'] = userData.get('activo', True)
-                session.permanent = True
-                if request.is_json:
-                    return jsonify({"success": True, "access_token": tokens['access_token'],
-                                    "refresh_token": tokens['refresh_token'], "token_type": "Bearer",
-                                    "expires_in": tokens['expires_in'], "redirect": "/inicio"})
-                return redirect('/inicio')
-
-        # Generate temporary token for 2FA verification
-        import jwt as pyjwt
-        from datetime import datetime, timedelta
-        temp_token = pyjwt.encode(
-            {
-                'user_id': str(userData['_id']),
-                'type': 'temp_2fa',
-                'exp': datetime.utcnow() + timedelta(minutes=5)
-            },
-            current_app.secret_key,
-            algorithm='HS256'
-        )
-        
-        # Set 2FA pending state
-        TwoFactorSession.set_2fa_pending(session, str(userData['_id']), userData)
-        
-        if request.is_json:
-            return jsonify({
-                "success": True,
-                "requires_2fa": True,
-                "temp_token": temp_token,
-                "message": "Se requiere verificación de dos factores"
-            })
-        else:
-            # Para formulario web, mostrar página de 2FA
-            return render_template('Auth/2FA.html', temp_token=temp_token, email=data.get('email'))
-    
     # Generate JWT tokens
     try:
         tokens = current_app.jwt_auth.generate_tokens(userData)
@@ -370,105 +302,6 @@ def jwt_login():
     }), 200
 
 
-def verify_2fa(data):
-    """Verificar 2FA para flujo web"""
-    temp_token = data.get('temp_token')
-    token_2fa = data.get('2fa_token')
-    
-    if not temp_token or not token_2fa:
-        return render_template('Auth/Login.html', error="Datos de 2FA incompletos.")
-        
-    import jwt
-    try:
-        # Use current_app.secret_key safely
-        payload = jwt.decode(temp_token, current_app.secret_key, algorithms=['HS256'])
-        if payload.get('type') != 'temp_2fa':
-            return render_template('Auth/Login.html', error="Token 2FA inválido.")
-    except jwt.InvalidTokenError:
-        return render_template('Auth/Login.html', error="Token 2FA expirado o inválido.")
-        
-    user_id = payload['user_id']
-    user = MAuth.getUserById(user_id)
-    
-    if not user:
-        return render_template('Auth/Login.html', error="Usuario no encontrado.")
-        
-    two_fa = TwoFactorAuth()
-    # Decrypt secret before verifying
-    from infrastructure.core.encryption import get_encryption_manager
-    encryption_manager = get_encryption_manager()
-    
-    try:
-        encrypted_secret = user.get('2fa_secret')
-        if not encrypted_secret:
-             return render_template('Auth/Login.html', error="2FA no está configurado para este usuario.")
-        secret = encryption_manager.decrypt(encrypted_secret)
-    except Exception:
-        return render_template('Auth/Login.html', error="Error al procesar la seguridad 2FA.")
-
-    if two_fa.verify_token(secret, token_2fa):
-        # Complete login using session management
-        TwoFactorSession.complete_2fa_login(session, user)
-        response = redirect(url_for('RInicio.inicio'))
-        if data.get('remember_device'):
-            td_token, td_entry = TrustedDeviceManager.create_entry(request)
-            MAuth.addTrustedDevice(str(user['_id']), td_entry)
-            TrustedDeviceManager.set_cookie(response, td_token)
-        return response
-    else:
-        # Increment attempts and check for lockout
-        attempts = TwoFactorSession.increment_2fa_attempts(session)
-        if attempts >= MAX_2FA_ATTEMPTS:
-            TwoFactorSession.clear_2fa_pending(session)
-            return render_template('Auth/Login.html', error="Demasiados intentos fallidos de 2FA. Inicia sesión de nuevo.")
-            
-        return render_template('Auth/2FA.html', 
-                             temp_token=temp_token, 
-                             email=user.get('email'), 
-                             error=f"Código 2FA incorrecto. Intento {attempts}/{MAX_2FA_ATTEMPTS}")
-
-def verify_jwt_2fa(data):
-    """Verify 2FA token for JWT login"""
-    temp_token = data.get('temp_token')
-    token_2fa = data.get('2fa_token')
-    
-    if not temp_token or not token_2fa:
-        return jsonify({"success": False, "message": "Datos incompletos"}), 400
-    
-    # Verify temporary token
-    import jwt
-    from flask import current_app
-    try:
-        payload = jwt.decode(temp_token, current_app.secret_key, algorithms=['HS256'])
-        if payload.get('type') != 'temp_2fa':
-            return jsonify({"success": False, "message": "Token temporal inválido"}), 400
-    except jwt.InvalidTokenError:
-        return jsonify({"success": False, "message": "Token temporal inválido o expirado"}), 400
-    
-    user_id = payload['user_id']
-    user = MAuth.getUserById(user_id)
-    if not user:
-        return jsonify({"success": False, "message": "Usuario no encontrado"}), 404
-    
-    # Verify 2FA token
-    two_fa = TwoFactorAuth()
-    if two_fa.verify_token(user['2fa_secret'], token_2fa):
-        # Generate JWT tokens
-        jwt_auth = current_app.jwt_auth
-        tokens = jwt_auth.generate_tokens(user)
-        
-        return jsonify({
-            "success": True,
-            "user_info": {
-                "nombre": user.get("nombre", "Usuario"),
-                "avatar": user.get("avatar", ""),
-                "email": user.get("email", ""),
-                "rol": user.get("rol", "user")
-            },
-            **tokens
-        }), 200
-    else:
-        return jsonify({"success": False, "message": "Token 2FA inválido"}), 401
 
 @bp.route('/api/auth/refresh', methods=['POST'])
 def refresh_token():
@@ -529,7 +362,6 @@ def get_current_user():
             "user": user.get('user', ''),
             "rol": user.get('rol', ''),
             "avatar": user.get('avatar', ''),
-            "2fa_enabled": user.get('2fa_enabled', False)
         }
     }), 200
 
@@ -571,134 +403,3 @@ def admin_only_route():
         "user": request.current_user
     }), 200
 
-# 2FA Management Endpoints
-@bp.route('/api/auth/setup-2fa', methods=['POST'])
-@jwt_required
-def setup_2fa():
-    """Setup 2FA for authenticated user - requires password verification"""
-    current_user = request.current_user
-    data = request.get_json(silent=True) or {}
-    
-    # P2.2 - Password verification required before setup
-    password = data.get('password')
-    if not password:
-        return jsonify({"success": False, "message": "Password required for 2FA setup"}), 400
-    
-    # Verify user password
-    user_data = MAuth.getUserById(current_user['user_id'])
-    if not user_data or not check_password_hash(user_data.get('password', ''), password):
-        SecureLogger.log_auth_attempt("2FA_SETUP_FAILED", user_data.get('email', 'unknown'), request.remote_addr)
-        return jsonify({"success": False, "message": "Invalid password"}), 401
-    
-    # Generate new secret
-    two_fa = TwoFactorAuth()
-    secret = two_fa.generate_secret()
-    qr_code = two_fa.generate_qr_code(user_data['email'], secret)
-    
-    # P1.4 - Encrypt secret before storing
-    encryption_manager = get_encryption_manager()
-    encrypted_secret = encryption_manager.encrypt(secret)
-    
-    # Store encrypted secret temporarily (not enabled yet)
-    MAuth.updateUsuario(current_user['user_id'], {
-        '2fa_secret': encrypted_secret,
-        '2fa_enabled': False  # Will be enabled after verification
-    })
-    
-    SecureLogger.log_auth_attempt("2FA_SETUP_INITIATED", user_data.get('email', 'unknown'), request.remote_addr)
-    
-    return jsonify({
-        "success": True,
-        "qr_code": qr_code,
-        "secret": secret,  # Only show once for backup
-        "message": "Scan QR code and verify with a code to enable 2FA"
-    })
-
-@bp.route('/api/auth/verify-2fa-setup', methods=['POST'])
-@jwt_required
-def verify_2fa_setup():
-    """Verify 2FA setup and enable it"""
-    current_user = request.current_user
-    data = request.get_json(silent=True) or {}
-    
-    user_data = MAuth.getUserById(current_user['user_id'])
-    if not user_data:
-        return jsonify({"success": False, "message": "User not found"}), 404
-    
-    # Get and decrypt secret
-    encryption_manager = get_encryption_manager()
-    encrypted_secret = user_data.get('2fa_secret')
-    if not encrypted_secret:
-        return jsonify({"success": False, "message": "2FA not setup"}), 400
-    
-    try:
-        secret = encryption_manager.decrypt(encrypted_secret)
-    except Exception as e:
-        SecureLogger.safe_log(f"Error decrypting 2FA secret: {str(e)}", "ERROR")
-        return jsonify({"success": False, "message": "2FA setup error"}), 500
-    
-    # Verify the code
-    two_fa = TwoFactorAuth()
-    if not two_fa.verify_token(secret, data.get('code', '')):
-        return jsonify({"success": False, "message": "Invalid verification code"}), 400
-    
-    # Enable 2FA
-    MAuth.updateUsuario(current_user['user_id'], {'2fa_enabled': True})
-    
-    SecureLogger.log_auth_attempt("2FA_SETUP_COMPLETED", user_data.get('email', 'unknown'), request.remote_addr)
-    
-    return jsonify({
-        "success": True,
-        "message": "2FA enabled successfully"
-    })
-
-@bp.route('/api/auth/disable-2fa', methods=['POST'])
-@jwt_required
-def disable_2fa():
-    """Disable 2FA - requires password verification"""
-    current_user = request.current_user
-    data = request.get_json(silent=True) or {}
-    
-    # P1.1 - Password verification required before disable
-    password = data.get('password')
-    if not password:
-        return jsonify({"success": False, "message": "Password required to disable 2FA"}), 400
-    
-    # Verify user password
-    user_data = MAuth.getUserById(current_user['user_id'])
-    if not user_data or not check_password_hash(user_data.get('password', ''), password):
-        SecureLogger.log_auth_attempt("2FA_DISABLE_FAILED", user_data.get('email', 'unknown'), request.remote_addr)
-        return jsonify({"success": False, "message": "Invalid password"}), 401
-    
-    # Check if 2FA is enabled
-    if not user_data.get('2fa_enabled', False):
-        return jsonify({"success": False, "message": "2FA is not enabled"}), 400
-    
-    # Disable 2FA and remove secret
-    MAuth.updateUsuario(current_user['user_id'], {
-        '2fa_enabled': False,
-        '2fa_secret': None
-    })
-    
-    SecureLogger.log_auth_attempt("2FA_DISABLED", user_data.get('email', 'unknown'), request.remote_addr)
-    
-    return jsonify({
-        "success": True,
-        "message": "2FA disabled successfully"
-    })
-
-@bp.route('/api/auth/2fa-status', methods=['GET'])
-@jwt_required
-def get_2fa_status():
-    """Get current 2FA status"""
-    current_user = request.current_user
-    user_data = MAuth.getUserById(current_user['user_id'])
-    
-    if not user_data:
-        return jsonify({"success": False, "message": "User not found"}), 404
-    
-    return jsonify({
-        "success": True,
-        "2fa_enabled": user_data.get('2fa_enabled', False),
-        "has_secret": bool(user_data.get('2fa_secret'))
-    })
