@@ -1,0 +1,13 @@
+[run]
+omit =
+    tests/*
+    .venv/*
+    */migrations/*
+    infrastructure/core/swagger_config.py
+    domain/VCasas.py
+    domain/VPermisos.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
