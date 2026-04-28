@@ -1,8 +1,19 @@
 import pytest
 import json
 from app import create_app
-from infrastructure.model.MAuth import createUsuario, getUserByEmail
+from infrastructure.model.MAuth import createUsuario, getUserByEmail, deleteUsuario
 from werkzeug.security import generate_password_hash
+from infrastructure.core.redis_rate_limiter import RedisRateLimiter
+
+@pytest.fixture(autouse=True)
+def clear_rate_limits():
+    """Reset Redis rate limit counters before each test"""
+    try:
+        limiter = RedisRateLimiter(requests=5, window=60)
+        limiter.redis_client.delete('rate_limit:127.0.0.1')
+    except Exception:
+        pass
+    yield
 
 @pytest.fixture
 def app():
@@ -20,22 +31,23 @@ def client(app):
 
 @pytest.fixture
 def test_user():
-    """Create test user"""
+    """Create test user with fresh hashed password"""
     user_data = {
         'nombre': 'Test User',
         'email': 'test@example.com',
         'user': 'testuser',
-        'password': 'testpassword123',
+        'password': generate_password_hash('testpassword123'),
         'rol': 'user',
         'activo': True
     }
     
-    # Check if user exists, if not create it
     existing_user = getUserByEmail(user_data['email'])
     if existing_user:
-        return existing_user
+        deleteUsuario(str(existing_user['_id']))
     
-    return createUsuario(user_data)
+    result = createUsuario(user_data)
+    yield result
+    deleteUsuario(str(result.inserted_id))
 
 class TestAuthRoutes:
     """Test authentication routes"""
@@ -100,7 +112,7 @@ class TestAuthRoutes:
                    content_type='application/json')
         
         # Then logout
-        response = client.get('/Logout')
+        response = client.get('/logout')
         
         assert response.status_code == 302  # Redirect
     
@@ -117,12 +129,12 @@ class TestAuthRoutes:
                    content_type='application/json')
         
         # Get profile
-        response = client.get('/get_user')
+        response = client.get('/get_perfil')
         
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert data['user']['email'] == 'test@example.com'
+        assert data['usuario']['email'] == 'test@example.com'
     
     def test_update_user_profile(self, client, test_user):
         """Test updating user profile"""

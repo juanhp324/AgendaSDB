@@ -49,7 +49,7 @@ def get_database():
         try:
             _client = MongoClient(MONGODB_URI, **CONNECTION_CONFIG)
             # Test connection with timeout
-            _client.admin.command('ping', serverSelectionTimeoutMS=3000)
+            _client.admin.command('ping')
             _db = _client[DATABASE_NAME]
             print(f"[OK] Conexion exitosa a MongoDB: {DATABASE_NAME}")
         except Exception as e:

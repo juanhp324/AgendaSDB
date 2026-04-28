@@ -45,7 +45,7 @@ class RedisRateLimiter:
             bool: True if request is allowed, False otherwise
         """
         try:
-            current_time = int(time.time())
+            current_time = time.time()
             window_start = current_time - self.window
             
             # Redis key for this IP
@@ -60,8 +60,8 @@ class RedisRateLimiter:
             # Count current requests in window
             pipe.zcard(redis_key)
             
-            # Add current request
-            pipe.zadd(redis_key, {str(current_time): current_time})
+            # Unique member per request to avoid same-second deduplication
+            pipe.zadd(redis_key, {str(time.time_ns()): current_time})
             
             # Set expiration to clean up old keys
             pipe.expire(redis_key, self.window)
