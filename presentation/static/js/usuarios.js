@@ -140,26 +140,6 @@ function manejadorEliminarDesdeDetalle() {
     confirmarEliminarUsuario(window.currentDetailUserId);
 }
 
-async function manejadorDisable2FA() {
-    if (!window.currentDetailUserId) return;
-    if (!confirm('¿Desactivar 2FA para este usuario?')) return;
-    try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const res = await fetch(`/disable_2fa_usuario/${window.currentDetailUserId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('2FA desactivado para el usuario', 'success');
-            document.getElementById('btnDisable2FADetalle').style.display = 'none';
-            const u = window.allUsersData.find(x => x._id === window.currentDetailUserId);
-            if (u) u['2fa_enabled'] = false;
-        } else {
-            showToast(data.message || 'Error', 'error');
-        }
-    } catch { showToast('Error de conexión', 'error'); }
-}
 
 function confirmarDesactivar(id) {
     const u = window.allUsersData.find(x => x._id === id);

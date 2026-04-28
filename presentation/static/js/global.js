@@ -185,14 +185,6 @@ async function openPerfilModal() {
             document.getElementById('perfil_user').value = data.usuario.user || '';
             document.getElementById('perfil_rol').value = data.usuario.rol || '';
             document.getElementById('perfil_password').value = '';
-            const twofa = data.usuario['2fa_enabled'] || false;
-            document.getElementById('twofa-badge').textContent = twofa ? 'Activado' : 'Desactivado';
-            document.getElementById('twofa-badge').style.background = twofa ? '#dcfce7' : '#fee2e2';
-            document.getElementById('twofa-badge').style.color = twofa ? '#16a34a' : '#dc2626';
-            document.getElementById('twofa-off-view').style.display = twofa ? 'none' : '';
-            document.getElementById('twofa-on-view').style.display = twofa ? '' : 'none';
-            document.getElementById('twofa-setup-view').style.display = 'none';
-            loadTrustedDevices();
             modal.classList.add('active');
             toggleBodyScroll();
             document.getElementById('userDropdown').classList.remove('open');
@@ -243,122 +235,6 @@ async function guardarPerfil() {
         closeStatusModal();
         showToast('Error de conexión', 'error');
     }
-}
-
-// ── Trusted Devices ──
-async function loadTrustedDevices() {
-    const list = document.getElementById('trusted-devices-list');
-    const btnAll = document.getElementById('btn-revoke-all-td');
-    if (!list) return;
-    try {
-        const res = await fetch('/perfil/trusted-devices');
-        const data = await res.json();
-        if (!data.success) { list.innerHTML = '<span>Error al cargar dispositivos.</span>'; return; }
-        if (data.devices.length === 0) {
-            list.innerHTML = '<span>No hay dispositivos de confianza activos.</span>';
-            if (btnAll) btnAll.style.display = 'none';
-        } else {
-            list.innerHTML = data.devices.map(d => `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border,#f1f5f9)">
-                  <div><strong>${d.device_name}</strong><br>
-                    <span style="color:var(--text-muted,#94a3b8)">${d.ip} &nbsp;·&nbsp; Creado ${d.created_at} &nbsp;·&nbsp; Expira ${d.expires_at}</span>
-                  </div>
-                  <button onclick="revokeTrustedDevice('${d.id}')" class="btn btn-ghost" style="font-size:0.75rem;padding:2px 8px">✕</button>
-                </div>`).join('');
-            if (btnAll) btnAll.style.display = '';
-        }
-    } catch { list.innerHTML = '<span>Error de conexión.</span>'; }
-}
-
-async function revokeTrustedDevice(deviceId) {
-    try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const res = await fetch(`/perfil/trusted-devices/${deviceId}/revoke`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
-        });
-        const data = await res.json();
-        if (data.success) { showToast('Dispositivo revocado', 'success'); loadTrustedDevices(); }
-        else showToast(data.message || 'Error', 'error');
-    } catch { showToast('Error de conexión', 'error'); }
-}
-
-async function revokeAllTrustedDevices() {
-    if (!confirm('¿Revocar todos los dispositivos de confianza?')) return;
-    try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const res = await fetch('/perfil/trusted-devices/revoke-all', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
-        });
-        const data = await res.json();
-        if (data.success) { showToast('Todos los dispositivos revocados', 'success'); loadTrustedDevices(); }
-    } catch { showToast('Error de conexión', 'error'); }
-}
-
-// ── 2FA ──
-async function init2FASetup() {
-    try {
-        const res = await fetch('/perfil/2fa/setup');
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('twofa-qr-img').src = data.qr_code;
-            document.getElementById('twofa-code-input').value = '';
-            document.getElementById('twofa-off-view').style.display = 'none';
-            document.getElementById('twofa-setup-view').style.display = '';
-        } else {
-            showToast(data.message || 'Error al iniciar 2FA', 'error');
-        }
-    } catch (e) { showToast('Error de conexión', 'error'); }
-}
-
-async function verify2FACode() {
-    const code = document.getElementById('twofa-code-input').value.trim();
-    if (code.length !== 6) { showToast('Ingresa el código de 6 dígitos', 'warning'); return; }
-    try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const res = await fetch('/perfil/2fa/enable', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ code })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('2FA activado correctamente 🔐', 'success');
-            document.getElementById('twofa-setup-view').style.display = 'none';
-            document.getElementById('twofa-on-view').style.display = '';
-            document.getElementById('twofa-badge').textContent = 'Activado';
-            document.getElementById('twofa-badge').style.background = '#dcfce7';
-            document.getElementById('twofa-badge').style.color = '#16a34a';
-        } else {
-            showToast(data.message || 'Código incorrecto', 'error');
-        }
-    } catch { showToast('Error de conexión', 'error'); }
-}
-
-function cancel2FASetup() {
-    document.getElementById('twofa-setup-view').style.display = 'none';
-    document.getElementById('twofa-off-view').style.display = '';
-}
-
-async function disable2FA() {
-    if (!confirm('¿Seguro que deseas desactivar 2FA?')) return;
-    try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const res = await fetch('/perfil/2fa/disable', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('2FA desactivado', 'success');
-            document.getElementById('twofa-on-view').style.display = 'none';
-            document.getElementById('twofa-off-view').style.display = '';
-            document.getElementById('twofa-badge').textContent = 'Desactivado';
-            document.getElementById('twofa-badge').style.background = '#fee2e2';
-            document.getElementById('twofa-badge').style.color = '#dc2626';
-        } else {
-            showToast(data.message || 'Error al desactivar 2FA', 'error');
-        }
-    } catch { showToast('Error de conexión', 'error'); }
 }
 
 // ── DARK MODE ──
