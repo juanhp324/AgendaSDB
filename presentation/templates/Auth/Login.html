@@ -16,21 +16,25 @@
 
   <!-- Loading overlay -->
   <div id="loginLoadingOverlay" aria-hidden="true">
-    <div class="llo-backdrop"></div>
-    <div class="llo-card">
-      <div class="llo-logo">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
+    <div class="llo-bg"></div>
+    <div class="llo-orb llo-orb1"></div>
+    <div class="llo-orb llo-orb2"></div>
+    <div class="llo-center">
+      <div class="llo-icon-wrap">
+        <div class="llo-icon-ring"></div>
+        <div class="llo-icon-ring llo-icon-ring2"></div>
+        <div class="llo-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
       </div>
-      <div class="llo-spinner">
-        <svg viewBox="0 0 50 50" class="llo-circle">
-          <circle cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
-        </svg>
+      <div class="llo-bar-wrap">
+        <div class="llo-bar"><div class="llo-bar-fill"></div></div>
       </div>
-      <p class="llo-title">Iniciando sesión</p>
-      <p class="llo-sub">Verificando credenciales<span class="llo-dots"><span>.</span><span>.</span><span>.</span></span></p>
+      <p class="llo-title">Bienvenido</p>
+      <p class="llo-sub">Preparando tu espacio de trabajo<span class="llo-dots"><span>.</span><span>.</span><span>.</span></span></p>
     </div>
   </div>
 
@@ -39,94 +43,117 @@
       position: fixed; inset: 0; z-index: 9999;
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
-      transition: opacity .35s ease;
+      transition: opacity .4s ease;
+      overflow: hidden;
     }
     #loginLoadingOverlay.visible {
       opacity: 1; pointer-events: all;
     }
-    .llo-backdrop {
+    .llo-bg {
       position: absolute; inset: 0;
-      background: rgba(15, 23, 42, .55);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      background: linear-gradient(145deg, #0f172a 0%, #1a0a12 50%, #0f172a 100%);
     }
-    .llo-card {
-      position: relative;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 24px;
-      padding: 44px 52px;
-      text-align: center;
-      box-shadow: 0 24px 64px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.18);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      transform: translateY(12px);
-      transition: transform .4s cubic-bezier(.22,1,.36,1);
+    .llo-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0;
+      transition: opacity .6s ease .1s;
     }
-    #loginLoadingOverlay.visible .llo-card {
-      transform: translateY(0);
+    #loginLoadingOverlay.visible .llo-orb { opacity: 1; }
+    .llo-orb1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(220,30,70,.45) 0%, transparent 70%);
+      top: -120px; left: -80px;
+      animation: llo-float1 6s ease-in-out infinite;
     }
-    .llo-logo {
-      width: 64px; height: 64px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    .llo-orb2 {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(167,20,50,.3) 0%, transparent 70%);
+      bottom: -100px; right: -60px;
+      animation: llo-float2 7s ease-in-out infinite;
+    }
+    @keyframes llo-float1 {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%      { transform: translate(30px,20px) scale(1.08); }
+    }
+    @keyframes llo-float2 {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%      { transform: translate(-20px,-25px) scale(1.05); }
+    }
+    .llo-center {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 20px;
+      transform: translateY(20px);
+      transition: transform .5s cubic-bezier(.22,1,.36,1);
+    }
+    #loginLoadingOverlay.visible .llo-center { transform: translateY(0); }
+
+    .llo-icon-wrap {
+      position: relative; width: 96px; height: 96px;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 22px;
-      box-shadow: 0 8px 24px rgba(102,126,234,.45);
-      color: #fff;
     }
-    .llo-spinner {
-      width: 56px; height: 56px;
-      margin: 0 auto 20px;
+    .llo-icon-ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 2px solid rgba(220,30,70,.35);
+      animation: llo-pulse 2.2s ease-in-out infinite;
     }
-    .llo-circle {
-      width: 100%; height: 100%;
-      animation: llo-rotate 1.4s linear infinite;
+    .llo-icon-ring2 {
+      inset: -14px;
+      border-color: rgba(220,30,70,.15);
+      animation-delay: .55s;
     }
-    .llo-circle circle {
-      stroke: url(#lloGrad);
-      stroke-dasharray: 100;
-      stroke-dashoffset: 60;
-      stroke-linecap: round;
-      animation: llo-dash 1.4s ease-in-out infinite;
+    @keyframes llo-pulse {
+      0%,100% { transform: scale(1); opacity: .7; }
+      50%      { transform: scale(1.12); opacity: 1; }
     }
-    @keyframes llo-rotate { 100% { transform: rotate(360deg); } }
-    @keyframes llo-dash {
-      0%   { stroke-dashoffset: 100; }
-      50%  { stroke-dashoffset: 20; }
-      100% { stroke-dashoffset: 100; }
+    .llo-icon {
+      width: 72px; height: 72px; border-radius: 22px;
+      background: linear-gradient(135deg, #DC1E46 0%, #a71432 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 8px rgba(220,30,70,.15), 0 12px 40px rgba(220,30,70,.5);
     }
+
+    .llo-bar-wrap { width: 200px; }
+    .llo-bar {
+      height: 3px; border-radius: 99px;
+      background: rgba(255,255,255,.12); overflow: hidden;
+    }
+    .llo-bar-fill {
+      height: 100%; width: 30%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #DC1E46, #ff6b8a, #DC1E46);
+      background-size: 200% 100%;
+      animation: llo-slide 1.6s ease-in-out infinite, llo-shimmer 1.6s linear infinite;
+    }
+    @keyframes llo-slide {
+      0%   { margin-left: 0; width: 30%; }
+      50%  { margin-left: 55%; width: 45%; }
+      100% { margin-left: 100%; width: 0; }
+    }
+    @keyframes llo-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
     .llo-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.15rem; font-weight: 700;
-      color: #fff; margin: 0 0 6px;
-      letter-spacing: -.01em;
+      font-size: 1.5rem; font-weight: 800;
+      color: #fff; margin: 0;
+      letter-spacing: -.02em;
     }
     .llo-sub {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: .85rem; color: rgba(255,255,255,.65);
-      margin: 0;
+      font-size: .88rem; color: rgba(255,255,255,.5);
+      margin: -8px 0 0;
     }
-    .llo-dots span {
-      display: inline-block;
-      animation: llo-blink 1.4s infinite both;
-    }
-    .llo-dots span:nth-child(2) { animation-delay: .2s; }
-    .llo-dots span:nth-child(3) { animation-delay: .4s; }
+    .llo-dots span { display: inline-block; animation: llo-blink 1.4s infinite both; }
+    .llo-dots span:nth-child(2) { animation-delay: .22s; }
+    .llo-dots span:nth-child(3) { animation-delay: .44s; }
     @keyframes llo-blink {
-      0%, 80%, 100% { opacity: 0; }
-      40%            { opacity: 1; }
+      0%,80%,100% { opacity: 0; }
+      40%          { opacity: 1; }
     }
   </style>
-
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <linearGradient id="lloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#667eea"/>
-        <stop offset="100%" stop-color="#764ba2"/>
-      </linearGradient>
-    </defs>
-  </svg>
 
   <!-- Floating theme toggle for login page -->
   <button id="themeToggle" class="theme-btn theme-btn-float" onclick="toggleTheme()" title="Cambiar tema">
