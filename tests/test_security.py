@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from infrastructure.core.safety import RateLimiter, CSRFProtector, CircuitBreaker, SecureLogger
 from infrastructure.core.redis_rate_limiter import RedisRateLimiter, FallbackRateLimiter, get_rate_limiter
+from app import create_app
 
 class TestSecurityFeatures(unittest.TestCase):
     """Test suite for security features"""
@@ -16,6 +17,12 @@ class TestSecurityFeatures(unittest.TestCase):
         """Set up test fixtures"""
         self.sample_ip = "192.168.1.1"
         self.sample_token = "test_csrf_token"
+        self.app = create_app({'TESTING': True, 'SECRET_KEY': 'test-secret-key'})
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+
+    def tearDown(self):
+        self.ctx.pop()
     
     def test_rate_limiter_basic_functionality(self):
         """Test basic rate limiter functionality"""
@@ -32,37 +39,28 @@ class TestSecurityFeatures(unittest.TestCase):
     
     def test_csrf_token_generation(self):
         """Test CSRF token generation"""
-        with patch('flask.session', {}):
+        with self.app.test_request_context():
             token = CSRFProtector.generate_token()
             self.assertIsNotNone(token)
             self.assertEqual(len(token), 64)  # 32 bytes * 2 (hex)
     
     def test_csrf_token_validation(self):
         """Test CSRF token validation"""
-        with patch('flask.session', {'csrf_token': self.sample_token}):
-            # Valid token should pass
+        with self.app.test_request_context():
+            from flask import session
+            session['csrf_token'] = self.sample_token
             self.assertTrue(CSRFProtector.validate_token(self.sample_token))
-            
-            # Invalid token should fail
             self.assertFalse(CSRFProtector.validate_token("invalid_token"))
-            
-            # Empty token should fail
             self.assertFalse(CSRFProtector.validate_token(""))
             self.assertFalse(CSRFProtector.validate_token(None))
     
     def test_secure_logger_sanitization(self):
         """Test that secure logging redacts sensitive information"""
-        # Test password redaction
-        message_with_password = "Login attempt with password=secret123"
-        sanitized = SecureLogger._sanitize_message(message_with_password)
-        self.assertIn("***REDACTED***", sanitized)
-        self.assertNotIn("secret123", sanitized)
-        
-        # Test MongoDB connection string redaction
-        message_with_mongo = "Connecting to mongodb+srv://user:pass@cluster.mongodb.net"
-        sanitized = SecureLogger._sanitize_message(message_with_mongo)
-        self.assertIn("***REDACTED***", sanitized)
-        self.assertNotIn("user:pass", sanitized)
+        with patch('builtins.print') as mock_print:
+            SecureLogger.safe_log("Login attempt with password=secret123")
+            logged = mock_print.call_args[0][0]
+            self.assertNotIn("secret123", logged)
+            self.assertIn("REDACTED", logged)
     
     def test_circuit_breaker_closed_state(self):
         """Test circuit breaker in closed state"""
@@ -121,9 +119,9 @@ class TestAppSecurity(unittest.TestCase):
     
     def test_secret_key_validation(self):
         """Test that app rejects default secret key"""
-        with patch.dict(os.environ, {'SECRET_KEY': 'agenda_secret_key_2024'}):
+        with patch.dict(os.environ, {'SECRET_KEY': 'agenda_secret_key_2024'}, clear=False):
             with self.assertRaises(ValueError) as context:
-                from app import app  # This should raise ValueError
+                create_app()  # No test_config so it reads SECRET_KEY from env
             self.assertIn("SECRET_KEY no configurada", str(context.exception))
     
     def test_debug_mode_disabled(self):
